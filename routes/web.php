@@ -46,5 +46,3 @@ Route::get('/tutorial', 'FrontPageController@tutorial')->name("tutorial");
 Route::get('/term', 'FrontPageController@term')->name("term");
 Route::get('payment/payment-success', 'PaymentController@paymentSuccess')->name('payment-success');//支付成功跳转页面 
 Route::get('payment/payment-failed', 'PaymentController@paymentFailed')->name('payment-failed');//支付失败跳转页面
-
-
