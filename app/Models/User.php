@@ -10,19 +10,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 use Laravel\Passport\HasApiTokens;
 
 /**
  * 用户信息.
  */
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, Notifiable, HasRoles;
 
     protected $table = 'user';
     protected $casts = ['expired_at' => 'date:Y-m-d', 'reset_time' => 'date:Y-m-d', 'ban_time' => 'date:Y-m-d'];
     protected $dates = ['expired_at', 'reset_time'];
-    protected $guarded = ['id'];
+    protected $guarded = [];
 
     public function usedTrafficPercentage()
     {
@@ -34,9 +35,36 @@ class User extends Authenticatable
         return $this->d + $this->u;
     }
 
+    public function profile()
+    {
+        return [
+            'id' => $this->id,
+            'nickname' => $this->username,
+            'account' => $this->email,
+            'port' => $this->port,
+            'passwd' => $this->passwd,
+            'uuid' => $this->vmess_id,
+            'transfer_enable' => $this->transfer_enable,
+            'u' => $this->u,
+            'd' => $this->d,
+            't' => $this->t,
+            'enable' => $this->enable,
+            'speed_limit' => $this->speed_limit,
+            'credit' => $this->credit,
+            'expired_at' => $this->expired_at,
+            'ban_time' => $this->ban_time,
+            'level' => $this->level_name,
+            'group' => $this->userGroup->name ?? null,
+            'last_login' => $this->last_login,
+            'reset_time' => $this->reset_time,
+            'invite_num' => $this->invite_num,
+            'status' => $this->status,
+        ];
+    }
+
     public function onlineIpLogs(): HasMany
     {
-        return $this->hasMany(NodeOnlineUserIp::class);
+        return $this->hasMany(NodeOnlineIp::class);
     }
 
     public function payments(): HasMany
@@ -124,11 +152,6 @@ class User extends Authenticatable
         return $this->hasMany(Verify::class);
     }
 
-    public function group(): BelongsTo
-    {
-        return $this->belongsTo(UserGroup::class);
-    }
-
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(__CLASS__);
@@ -194,24 +217,25 @@ class User extends Authenticatable
         return $query->where('status', '<>', -1)->whereEnable(1);
     }
 
-    public function scopeNodeAllowUsers($query, $node_id, $node_level)
+    public function scopeBannedUser($query)
     {
-        $groups = [0];
-        if ($node_id) {
-            foreach (UserGroup::all() as $userGroup) {
-                $nodes = $userGroup->nodes;
-                if ($nodes && in_array($node_id, $nodes)) {
-                    $groups[] = $userGroup->id;
-                }
-            }
-        }
-
-        return $query->activeUser()->whereIn('group_id', $groups)->where('level', '>=', $node_level);
+        return $query->where('status', '>=', 0)->whereEnable(0);
     }
 
-    public function scopeUserAccessNodes()
+    public function nodes()
     {
-        return Node::userAllowNodes($this->attributes['group_id'] ?? 0, $this->attributes['level'] ?? 0);
+        if ($this->attributes['user_group_id']) {
+            $query = $this->userGroup->nodes();
+        } else {
+            $query = Node::query();
+        }
+
+        return $query->whereStatus(1)->where('level', '<=', $this->attributes['level'] ?? 0);
+    }
+
+    public function userGroup(): BelongsTo
+    {
+        return $this->belongsTo(UserGroup::class);
     }
 
     public function getIsAvailableAttribute(): bool
@@ -254,7 +278,7 @@ class User extends Authenticatable
             $expired_status = -1; // 已过期
         } elseif ($this->expired_at === date('Y-m-d')) {
             $expired_status = 0; // 今天过期
-        } elseif ($this->expired_at > date('Y-m-d') && $this->expired_at <= date('Y-m-d', strtotime('+30 days'))) {
+        } elseif ($this->expired_at > date('Y-m-d') && $this->expired_at <= date('Y-m-d', strtotime('30 days'))) {
             $expired_status = 1; // 最近一个月过期
         }
 
@@ -279,5 +303,15 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
