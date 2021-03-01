@@ -30,3 +30,19 @@ Route::middleware(['isForbidden', 'affiliate', 'isMaintenance'])->group(function
 });
 Route::get('admin/login', 'AuthController@showLoginForm')->name('admin.login')->middleware('isForbidden', 'isSecurity'); // 管理登录页面
 Route::post('admin/login', 'AuthController@login')->middleware('isSecurity')->name('admin.login.post'); // 管理登录
+
+//前端静态页面
+Route::get('/', 'FrontPageController@home')->name("home");
+//Route::get('/home', 'FrontPageController@home')->name("home");
+Route::get('/price', 'FrontPageController@price')->name("price");
+Route::get('/feature', 'FrontPageController@feature')->name("feature");
+Route::get('/help-n', 'FrontPageController@help')->name("help-n");
+Route::get('/help-subpage-n', 'FrontPageController@helpsubpage')->name("help-subpage-n");
+//Route::get('/help-n/subpage', 'FrontPageController@helpsubpage')->name("help-subpage-n");
+Route::get('/vpn-apps', 'FrontPageController@vpn')->name("vpn-apps");
+Route::get('/account-n', 'FrontPageController@account')->name("account-n");
+Route::get('/contact', 'FrontPageController@contact')->name("contact");
+Route::get('/tutorial', 'FrontPageController@tutorial')->name("tutorial");
+Route::get('/term', 'FrontPageController@term')->name("term");
+Route::get('payment/payment-success', 'PaymentController@paymentSuccess')->name('payment-success');//支付成功跳转页面 
+Route::get('payment/payment-failed', 'PaymentController@paymentFailed')->name('payment-failed');//支付失败跳转页面
