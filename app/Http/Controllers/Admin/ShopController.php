@@ -36,7 +36,7 @@ class ShopController extends Controller
             $query->whereStatus($status);
         }
 
-        return view('admin.shop.index', ['goodsList' => $query->whereIs_del(0)->orderByDesc('status')->paginate(10)->appends($request->except('page'))]);
+        return view('admin.shop.index', ['goodsList' => $query->orderByDesc('status')->paginate(10)->appends($request->except('page'))]);
     }
 
     // 添加商品页面
@@ -146,3 +146,4 @@ class ShopController extends Controller
         return Response::json(['status' => 'fail', 'message' => '删除失败']);
     }
 }
+© 2021 GitHub, Inc.
