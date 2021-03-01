@@ -8,6 +8,7 @@ use App\Http\Controllers\Gateway\CodePay;
 use App\Http\Controllers\Gateway\EPay;
 use App\Http\Controllers\Gateway\F2Fpay;
 use App\Http\Controllers\Gateway\Local;
+use App\Http\Controllers\Gateway\PayBeaver;
 use App\Http\Controllers\Gateway\PayJs;
 use App\Http\Controllers\Gateway\PayPal;
 use App\Http\Controllers\Gateway\Stripe;
@@ -23,11 +24,6 @@ use Log;
 use Response;
 use Jenssegers\Agent\Agent;
 
-/**
- * 支付控制器.
- *
- * Class PaymentController
- */
 class PaymentController extends Controller
 {
     private static $method;
@@ -61,6 +57,8 @@ class PaymentController extends Controller
                 return new EPay();
             case 'stripe':
                 return new Stripe();
+            case 'paybeaver':
+                return new PayBeaver();
             default:
                 Log::warning('未知支付：'.self::$method);
 
@@ -97,16 +95,15 @@ class PaymentController extends Controller
         $pay_mode = $request->input('pay_mode');
         $amount = 0;
 
-        \Log::debug($request->input('method'));
-        $goods = Goods::find($goods_id);
         // 充值余额
         if ($credit) {
             if (! is_numeric($credit) || $credit <= 0) {
-                return Response::json(['status' => 'fail', 'message' => '充值余额不合规']);
+                return Response::json(['status' => 'fail', 'message' => trans('user.payment.error')]);
             }
             $amount = $credit;
         // 购买服务
         } elseif ($goods_id && self::$method) {
+            $goods = Goods::find($goods_id);
             if (! $goods || ! $goods->status) {
                 return Response::json(['status' => 'fail', 'message' => '订单创建失败：商品已下架']);
             }
@@ -118,6 +115,26 @@ class PaymentController extends Controller
             //　无生效套餐，禁止购买加油包
             if ($goods->type === 1 && $activePlan) {
                 return Response::json(['status' => 'fail', 'message' => '购买加油包前，请先购买套餐']);
+            }
+
+            // 单个商品限购
+            if ($goods->limit_num) {
+                $count = Order::uid()->where('status', '>=', 0)->whereGoodsId($goods_id)->count();
+                if ($count >= $goods->limit_num) {
+                    return Response::json(['status' => 'fail', 'message' => '此商品限购'.$goods->limit_num.'次，您已购买'.$count.'次']);
+                }
+            }
+
+            // 使用优惠券
+            if ($coupon_sn) {
+                $coupon = Coupon::whereStatus(0)->whereIn('type', [1, 2])->whereSn($coupon_sn)->first();
+                if (! $coupon) {
+                    return Response::json(['status' => 'fail', 'message' => '订单创建失败：优惠券不存在']);
+                }
+
+                // 计算实际应支付总价
+                $amount = $coupon->type === 2 ? $goods->price * $coupon->value / 100 : $goods->price - $coupon->value;
+                $amount = $amount > 0 ? round($amount, 2) : 0; // 四舍五入保留2位小数，避免无法正常创建订单
             }
 
             //非余额付款下，检查在线支付是否开启
@@ -135,26 +152,6 @@ class PaymentController extends Controller
                 return Response::json(['status' => 'fail', 'message' => '您的余额不足，请先充值']);
             }
 
-            // 单个商品限购
-            if ($goods->limit_num) {
-                $count = Order::uid()->where('status', '>=', 0)->whereGoodsId($goods_id)->count();
-                if ($count >= $goods->limit_num) {
-                    return Response::json(['status' => 'fail', 'message' => '此商品限购'.$goods->limit_num.'次，您已购买'.$count.'次']);
-                }
-            }
-
-            // 使用优惠券 TODO 代码整合至 CouponService
-            if ($coupon_sn) {
-                $coupon = Coupon::whereStatus(0)->whereIn('type', [1, 2])->whereSn($coupon_sn)->first();
-                if (! $coupon) {
-                    return Response::json(['status' => 'fail', 'message' => '订单创建失败：优惠券不存在']);
-                }
-
-                // 计算实际应支付总价
-                $amount = $coupon->type === 2 ? $goods->price * $coupon->value / 100 : $goods->price - $coupon->value;
-                $amount = $amount > 0 ? round($amount, 2) : 0; // 四舍五入保留2位小数，避免无法正常创建订单
-            }
-
             // 价格异常判断
             if ($amount < 0) {
                 return Response::json(['status' => 'fail', 'message' => '订单创建失败：订单总价异常']);
@@ -165,31 +162,29 @@ class PaymentController extends Controller
             }
         }
 
-        $orderSn = date('ymdHis').random_int(100000, 999999);
-
         // 生成订单
         try {
-            $order = new Order();
-            $order->order_sn = $orderSn;
-            $order->user_id = Auth::id();
-            $order->goods_id = $credit ? 0 : $goods_id;
-            $order->coupon_id = $coupon->id ?? 0;
-            $order->origin_amount = $credit ?: $goods->price;
-            $order->amount = $amount;
-            $order->pay_type = $pay_type;
-            $order->pay_way = self::$method;
-            $order->save();
+            $newOrder = Order::create([
+                'sn' => date('ymdHis').random_int(100000, 999999),
+                'user_id' => auth()->id(),
+                'goods_id' => $credit ? null : $goods_id,
+                'coupon_id' => $coupon->id ?? null,
+                'origin_amount' => $credit ?: $goods->price ?? 0,
+                'amount'=>$amount,
+                'pay_type'=>$pay_type,
+                'pay_way'=>self::$method,
+            ]);
 
             // 使用优惠券，减少可使用次数
             if (! empty($coupon)) {
                 if ($coupon->usable_times > 0) {
-                    Coupon::whereId($coupon->id)->decrement('usable_times', 1);
+                    $coupon->decrement('usable_times', 1);
                 }
 
-                Helpers::addCouponLog('订单支付使用', $coupon->id, $goods_id, $order->id);
+                Helpers::addCouponLog('订单支付使用', $coupon->id, $goods_id, $newOrder->id);
             }
 
-            $request->merge(['id' => $order->id, 'mode'=> $pay_mode,'type' => $pay_type, 'amount' => $amount]);
+            $request->merge(['id' => $newOrder->id, 'mode'=> $pay_mode,'type' => $pay_type, 'amount' => $amount]);
 
             // 生成支付单
             return self::getClient()->purchase($request);
@@ -200,15 +195,10 @@ class PaymentController extends Controller
         return Response::json(['status' => 'fail', 'message' => '订单创建失败']);
     }
 
-    public function close(Request $request): JsonResponse
+    public function close(Order $order): JsonResponse
     {
-        $order = Order::find($request->input('id'));
-        if ($order) {
-            if (! $order->update(['status' => -1])) {
-                return Response::json(['status' => 'fail', 'message' => '关闭订单失败']);
-            }
-        } else {
-            return Response::json(['status' => 'fail', 'message' => '未找到订单']);
+        if (! $order->close()) {
+            return Response::json(['status' => 'fail', 'message' => '关闭订单失败']);
         }
 
         return Response::json(['status' => 'success', 'message' => '关闭订单成功']);
@@ -218,16 +208,19 @@ class PaymentController extends Controller
     public function detail($trade_no)
     {
         $payment = Payment::uid()->with(['order', 'order.goods'])->whereTradeNo($trade_no)->firstOrFail();
-        $view['payment'] = $payment;
         $goods = $payment->order->goods;
-        $view['name'] = $goods->name ?? '余额充值';
-        $view['days'] = $goods->days ?? 0;
-        $view['pay_type'] = $payment->order->pay_type_label ?: 0;
-        $view['pay_type_icon'] = $payment->order->pay_type_icon;
 
-        return view('user.payment', $view);
+        return view('user.payment', [
+            'payment' => $payment,
+            'name' => $goods->name ?? trans('user.recharge_credit'),
+            'days' => $goods->days ?? 0,
+            'pay_type' => $payment->order->pay_type_label ?: 0,
+            'pay_type_icon' => $payment->order->pay_type_icon,
+        ]);
     }
-      public function paymentSuccess(Request $request)
+    
+    
+     public function paymentSuccess(Request $request)
     {
         $agent = new Agent();
 
@@ -248,6 +241,4 @@ class PaymentController extends Controller
             return view('static-pages.desktop.failed-payment');
         }
     }
-    
-    
 }
