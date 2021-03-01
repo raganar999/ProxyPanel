@@ -22,6 +22,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Log;
 use Response;
+use Jenssegers\Agent\Agent;
 
 class PaymentController extends Controller
 {
@@ -91,6 +92,7 @@ class PaymentController extends Controller
         self::$method = $request->input('method');
         $credit = $request->input('amount');
         $pay_type = $request->input('pay_type');
+        $pay_mode = $request->input('pay_mode');
         $amount = 0;
 
         // 充值余额
@@ -182,7 +184,7 @@ class PaymentController extends Controller
                 Helpers::addCouponLog('订单支付使用', $coupon->id, $goods_id, $newOrder->id);
             }
 
-            $request->merge(['id' => $newOrder->id, 'type' => $pay_type, 'amount' => $amount]);
+            $request->merge(['id' => $newOrder->id, 'mode'=> $pay_mode,'type' => $pay_type, 'amount' => $amount]);
 
             // 生成支付单
             return self::getClient()->purchase($request);
@@ -215,5 +217,28 @@ class PaymentController extends Controller
             'pay_type' => $payment->order->pay_type_label ?: 0,
             'pay_type_icon' => $payment->order->pay_type_icon,
         ]);
+    }
+    
+    
+     public function paymentSuccess(Request $request)
+    {
+        $agent = new Agent();
+
+        if ($agent->isMobile() || $agent->isTablet()) {
+            return view('static-pages.mobile.success-payment');
+        } else {
+            return view('static-pages.desktop.success-payment');
+        }
+    }
+
+    public function paymentFailed(Request $request)
+    {
+        $agent = new Agent();
+
+        if ($agent->isMobile() || $agent->isTablet()) {
+            return view('static-pages.mobile.failed-payment');
+        } else {
+            return view('static-pages.desktop.failed-payment');
+        }
     }
 }
