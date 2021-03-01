@@ -40,7 +40,7 @@ class AuthController extends Controller
                 return Redirect::route('admin.index');
             }
 
-            return Redirect::route('usercenter');
+            return Redirect::route('home');
         }
 
         return view('auth.login');
@@ -51,7 +51,6 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), ['email' => 'required|email', 'password' => 'required']);
 
         if ($validator->fails()) {
-             Session::flash('errorLoginMsg', '请输入正确的用户名和密码');
             return Redirect::back()->withInput()->withErrors($validator->errors());
         }
 
@@ -199,7 +198,6 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Session::flash('errorRegMsg', '请输入合法的用户名和密码');
             return Redirect::back()->withInput()->withErrors($validator->errors());
         }
         $data = $request->validated();
@@ -210,7 +208,6 @@ class AuthController extends Controller
 
         // 防止重复提交
         if ($register_token !== Session::get('register_token')) {
-            Session::flash('errorRegMsg', '请勿重复请求，刷新一下页面再试试');
             return Redirect::back()->withInput()->withErrors(trans('auth.error.repeat_request'));
         }
 
@@ -218,7 +215,6 @@ class AuthController extends Controller
 
         // 是否开启注册
         if (! sysConfig('is_register')) {
-            Session::flash('errorRegMsg', '系统维护，暂停注册');
             return Redirect::back()->withErrors(trans('auth.register.error.disable'));
         }
 
