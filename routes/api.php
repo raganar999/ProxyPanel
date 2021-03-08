@@ -1,5 +1,9 @@
 <?php
 
+ Route::post( 'callback/notify/{paymethod}', 'PaymentController@notify')->name('payment.notify'); //支付回调
+ 
+
+
 // 后端WEBAPI
 Route::group(['namespace' => 'Api\WebApi', 'middleware' => 'webApi'], function () {
     // VNet后端WEBAPI V1版
@@ -69,7 +73,7 @@ Route::group(['middleware' => ['auth:api','checkPostPara']], function() {
     Route::post('user/ver1/updateuser','Api\Client\AuthsController@updateUser');
     Route::post('user/ver1/buy','Api\Client\Buycontroller@create');
     Route::get('user/ver1/serverlist','Api\Client\Client\UsersController@serverList');
-    Route::get('user/ver1/get_userstatus','Api\Client\UsersController@get_userstatus');
+    Route::get('user/ver1/userstatus','Api\Client\UsersController@userStatus');
     Route::get('user/ver1/goodslist','Api\Client\UsersController@goodslist');
     Route::get('user/ver1/puerchased','Api\Client\UsersController@puerchased');
     Route::get('user/ver1/latestVersion/{device_type}','Api\Client\UsersController@latestVersion');

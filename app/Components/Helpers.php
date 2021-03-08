@@ -6,6 +6,7 @@ use App\Models\CouponLog;
 use App\Models\Marketing;
 use App\Models\NotificationLog;
 use App\Models\SsConfig;
+use App\Models\Config;
 use App\Models\User;
 use App\Models\UserCreditLog;
 use App\Models\UserDataModifyLog;

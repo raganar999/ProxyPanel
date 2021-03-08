@@ -18,6 +18,7 @@ use App\Mail\resetPassword;
 use App\Mail\sendVerifyCode;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Notifications\Verification;
 use Illuminate\Support\Str;
 use Response;
 use Redirect;
@@ -41,18 +42,19 @@ class AuthsController extends Controller
     protected static $systemConfig;
     public $new_username='';
 
+   
     function __construct()
     {
         self::$systemConfig = Helpers::systemConfig();
     }
-    
+   
     // 自动注册
     
    
 	
     public function autoRegister(Request $request)
     {
-           $cacheKey = 'register_times_'.md5(IP::getClientIp()); // 注册限制缓存key
+            $cacheKey = 'register_times_'.md5(IP::getClientIp()); // 注册限制缓存key
 
            	$password_str = Str::random(10);
           
@@ -106,15 +108,15 @@ class AuthsController extends Controller
            
 
             // 创建新用户
-            $uid = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id);
-
+            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id);
+           //  \Log::debug($user);
             // 注册失败，抛出异常
-            if (! $uid) {
+            if (! $user) {
                 return Redirect::back()->withInput()->withErrors(trans('auth.register_fail'));
             }
-            // 更新昵称
-            User::find($uid)->update(['username' => $username]);
             
+            
+          //  User::find($uid)->update(['username' => $username]);
             
             // 注册次数+1
             if (Cache::has($cacheKey)) {
@@ -128,8 +130,8 @@ class AuthsController extends Controller
                 Invite::find($affArr['code_id'])->update(['invitee_id' => $uid, 'status' => 1]);
             }
             
-            $user= User::find($uid);
-           //  \Log::debug($user);
+           // $user= User::find($uid);
+           // \Log::debug($user);
             $tokenResult = $user->createToken('Personal Access Token');
            //   \Log::debug($tokenResult);
             $token = $tokenResult->token;
@@ -140,32 +142,27 @@ class AuthsController extends Controller
                 $response['token_data'] = [
             		'token_type'   =>  'Bearer',
                 	'access_token' => $tokenResult->accessToken,
-                	'expire_in'    => $tokenResult->token->expires_at,
+                	'expire_in'    => date("Y-m-d H:i:s" , strtotime($tokenResult->token->expires_at) ),
                 	'refresh_token' =>  ''
                 ]; 
-            
-        return response()->json($response);
+               $response['client_config'] = json_decode($this->getClientConfig()) ;
+               
+        return $response;
     }
     
     
-     public function login(Request $request){ 
+    public function login(Request $request){ 
   	
-  	 //\Log::debug($request->data);
-  	 
-  	  
-  	
-  	// \Log::debug($request->input('data.usename'));
-  //	$input_usename = $request->input('data.username');
-  //	$input_password = $request->input('data.password');
-      if(Auth::attempt(['username' => $request->username, 'password' =>$request->password])){ 
+      if(Auth::attempt(['email' => $request->email, 'password' =>$request->password])){ 
+           
             $user = Auth::user(); 
             $tokenResult       = $user->createToken('Personal Access Token');
             $token             = $tokenResult->token;
          //  $token->expires_at = Carbon::now()->addHours(1);
             $token->save();
-        
-        
-            $server_data = $this->getServerList($user->id);
+           
+            $this->addUserLoginLog($user->id, IP::getClientIp());
+           
 
             $response['error_code'] = 0;
             $response['message']    = '登录成功';
@@ -176,14 +173,14 @@ class AuthsController extends Controller
                 'refresh_token' =>  ''
             ]; 
             
-            $response['server_data'] = $server_data ;
             
-            $response['clinet_smart_config'] = $this->getClientSmartConfig() ;
+            
+           $response['client_config'] = json_decode($this->getClientConfig()) ;
            
     		//生成新的token事件
-            event(new GetNewToken($user));
+           // event(new GetNewToken($user));
            
-            return response()->json( $response);
+            return $response;
             
                
             
@@ -268,10 +265,9 @@ class AuthsController extends Controller
     public function updateUser(Request $request){
         $validator = Validator::make($request->all(), [
             'new_username'      => 'required|email|unique:user,username,'.Auth::id(),
-            'new_password'      => 'required',
-            'appkey'        => 'required',
-            'device'        => 'required',
-            'timestamp'     => 'required'
+            'new_password'      => 'required', 
+            'code'              => 'required'
+
 
         ]);
         if ($validator->fails()) {
@@ -283,8 +279,8 @@ class AuthsController extends Controller
              
         }
     
-        $user = User::where('id', Auth::id())->first();
-        $verifyCode = VerifyCode::query()->where('username', $user->username)->where('code', $request->code)->where('status', 0)->first();
+           $user = User::where('id', Auth::id())->first();
+           $verifyCode = VerifyCode::query()->where('username', $user->username)->where('code', $request->code)->where('status', 0)->first();
         
         if ($user->user_type == 1 && $verifyCode) {
             $user->username  = $request->new_username;
@@ -293,6 +289,8 @@ class AuthsController extends Controller
             $user->save();
            
             if ($user) {
+                
+               
             	// 失效已使用的验证码，这里会有bug ，如果在这个过程当中用户再来获取验证码，会有执行错误出现。
                 $verifyCode = VerifyCode::query()->where('username', $user->username)->where('code', $request->code)->where('status', 0)->first();
                 $verifyCode->status = 1; 
@@ -327,9 +325,9 @@ class AuthsController extends Controller
 
    public function sendCodeAPI(Request $request)
     {
-        $username = trim($request->post('username'));
+        $email = trim($request->post('email'));
 
-        if (!$username) {
+        if (!$email) {
             $response['error_code'] = null;
             $response['message']    = '1';
 
@@ -339,7 +337,7 @@ class AuthsController extends Controller
         }
 
         // 校验账号合法性
-        if (false === filter_var($username, FILTER_VALIDATE_EMAIL)) {
+        if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $response['error_code'] = null;
             $response['message']    = '2';
 
@@ -347,7 +345,7 @@ class AuthsController extends Controller
                 'error' => $response
             ]);
         }
-
+      /*
         // 校验域名邮箱是否在敏感词中
         $sensitiveWords = $this->sensitiveWords();
         $usernameSuffix = explode('@', $username); // 提取邮箱后缀
@@ -359,11 +357,11 @@ class AuthsController extends Controller
                 'error' => $response
             ]);
         }
-
-        $user = User::query()->where('username', $username)->first();
+      */
+        $user = User::query()->where('email', $email)->first();
         if (!$user) {
-            $response['error_code'] = null;
-            $response['message']    = '4';
+            $response['error_code'] = 3004;
+            $response['message']    = "username does not exist";;
 
             return response()->json([
                 'error' => $response
@@ -371,7 +369,7 @@ class AuthsController extends Controller
         }
         
          // 防刷机制
-        if (Cache::has('send_verify_code_' . md5(getClientIP()))) {
+        if (Cache::has('send_verify_code_' . md5(IP::getClientIp()))) {
             $response['error_code'] = null;
             $response['message']    = '6';
 
@@ -381,19 +379,19 @@ class AuthsController extends Controller
         }
 
         // 发送邮件
-        $code = makeRandStr(6, true);
+        $code = Str::random(4);
         $title = '发送注册验证码';
         $content = '验证码：' . $code;
 
-        $logId = Helpers::addEmailLog($username, $title, $content);
-        Mail::to($username)->send(new sendVerifyCode($logId, $code));
+        $logId = Helpers::addNotificationLog($title  ,$code,   1, $email,  $content);
+        //$user->notifyNow(new Verification($code));
 
-        $this->addVerifyCode($username, $code);
+        $this->addVerifyCode($email, $code);
 
-        Cache::put('send_verify_code_' . md5(getClientIP()), getClientIP(), 1);
+        Cache::put('send_verify_code_' . md5(IP::getClientIp()), IP::getClientIp(), 1);
 
         $response['error_code'] = 0;
-        $response['message']    = '验证码成功发送到邮箱';            
+        $response['message']    = 'verification code was successfully sent to the mail';            
         return response()->json($response);
 
 
@@ -410,10 +408,10 @@ class AuthsController extends Controller
     }
 
     // 生成注册验证码
-    private function addVerifyCode($username, $code)
+    private function addVerifyCode($email, $code)
     {
         $verify = new VerifyCode();
-        $verify->username = $username;
+        $verify->email = $email;
         $verify->code = $code;
         $verify->status = 0;
         $verify->save();
@@ -428,6 +426,35 @@ class AuthsController extends Controller
 		return true;
 	}
 	
+	
+	
+	 /**
+     * 添加用户登录日志.
+     *
+     * @param  int  $userId  用户ID
+     * @param  string  $ip  IP地址
+     */
+    private function addUserLoginLog(int $userId, string $ip): void
+    {
+        $ipLocation = IP::getIPInfo($ip);
+
+        if (empty($ipLocation) || empty($ipLocation['country'])) {
+            Log::warning('获取IP信息异常：'.$ip);
+        }
+
+        $log = new UserLoginLog();
+        $log->user_id = $userId;
+        $log->ip = $ip;
+        $log->country = $ipLocation['country'] ?? '';
+        $log->province = $ipLocation['province'] ?? '';
+        $log->city = $ipLocation['city'] ?? '';
+        $log->county = $ipLocation['county'] ?? '';
+        $log->isp = $ipLocation['isp'] ?? ($ipLocation['organization'] ?? '');
+        $log->area = $ipLocation['area'] ?? '';
+        $log->save();
+    }
+
+
     /**
      * 获取AFF.
      *
@@ -462,5 +489,30 @@ class AuthsController extends Controller
 
         return $data;
     }
+    
+    
+    // 生成用户标签
+    private function makeUserLabels($userId, $labels)
+    {
+        // 先删除该用户所有的标签
+        UserLabel::query()->where('user_id', $userId)->delete();
+
+        if (!empty($labels) && is_array($labels)) {
+            foreach ($labels as $label) {
+                $userLabel = new UserLabel();
+                $userLabel->user_id = $userId;
+                $userLabel->label_id = $label;
+                $userLabel->save();
+            }
+        }
+    }
+     
+      //生成客户端的smart 模式的配置文件
+      private function getClientConfig(){
+      	 $client_config = '{"api":{"services":["HandlerService","StatsService"],"tag":"api"},"stats":{},"inbound":{"port":443,"protocol":"vmess","settings":{"clients":[]},"sniffing":{"enabled": true,"destOverride": ["http","tls"]},"streamSettings":{"network":"tcp"},"tag":"proxy"},"inboundDetour":[{"listen":"0.0.0.0","port":23333,"protocol":"dokodemo-door","settings":{"address":"0.0.0.0"},"tag":"api"}],"log":{"loglevel":"debug","access":"access.log","error":"error.log"},"outbound":{"protocol":"freedom","settings":{}},"outboundDetour":[{"protocol":"blackhole","settings":{},"tag":"block"}],"routing":{"rules":[{"inboundTag":"api","outboundTag":"api","type":"field"}]},"policy":{"levels":{"0":{"handshake":4,"connIdle":300,"uplinkOnly":5,"downlinkOnly":30,"statsUserUplink":true,"statsUserDownlink":true}}}}';
+
+        return $client_config;
+      }
+     
 
 }

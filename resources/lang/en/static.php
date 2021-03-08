@@ -5,7 +5,11 @@ return [
     // General
     'login' => 'Sign In',
     'register' => 'Sign Up',
- 
+    'usercenter' => 'UserCenter',
+    'logout' => 'LogOut',
+    
+    
+    
     'features'  => 'Features',
     'price'  => 'Price',
     'download'  => ' Apps',
@@ -17,6 +21,14 @@ return [
     'help' => 'Help',
     'term' => 'Term',
     'about_us' => 'About Us',
+    
+   
+    //login
+    'email' => 'Please enter your email',
+    'password' => 'please enter your password',
+    'retype_password' => 'Please renter your password',
+    
+    
     
     // DESKTOP
 
@@ -30,6 +42,12 @@ return [
 
     'dsktp_feature_title_3' => 'Enjoy Any Content',
     'dsktp_feature_text_3' => '77VPN helps you to unblock websites in your network from around the globe. Provides unrestricted access to the web by allowing you to unblock websites. Get access to your favorite websites and content like Facebook, Twitter, and Pinterest that be blocked in your country from anywhere and anytime.',
+    
+    
+      'dsktp_feature_title_4' => ' High-quality services ',
+    'dsktp_feature_text_4' => '77VPN helps you to unblock websites in your network from around the globe. Provides unrestricted access to the web by allowing you to unblock websites. Get access to your favorite websites and content like Facebook, Twitter, and Pinterest that be blocked in your country from anywhere and anytime.',  
+    
+    
 
     'dsktp_section_about_title' => 'What people are saying about 77VPN',
     'dsktp_section_plan_title' => 'Choose the plan that works for you',

@@ -28,13 +28,19 @@ class PaymentController extends Controller
 {
     private static $method;
 
-    public static function notify(Request $request): int
+   public static function notify(Request $request, $paymethod): int
     {
-        self::$method = $request->input('method');
+        
+        //\Log::debug($paymethod);
+        
+        self::$method = $paymethod;
 
-        Log::info(self::$method.'回调接口[POST]：'.self::$method.var_export($request->all(), true));
+      //  Log::info(self::$method."回调接口[POST]：".self::$method.var_export($request->all(), true));
+        
+        
         self::getClient()->notify($request);
-
+       //  \Log::debug($request);
+       //  \Log::debug("支付回调");
         return 0;
     }
 
@@ -90,17 +96,17 @@ class PaymentController extends Controller
         $goods_id = $request->input('goods_id');
         $coupon_sn = $request->input('coupon_sn');
         self::$method = $request->input('method');
-        $credit = $request->input('amount');
+        $amount  = $request->input('amount');
         $pay_type = $request->input('pay_type');
         $pay_mode = $request->input('pay_mode');
-        $amount = 0;
-
+        $credit = 0;
+        \Log::debug($goods_id);
         // 充值余额
         if ($credit) {
             if (! is_numeric($credit) || $credit <= 0) {
                 return Response::json(['status' => 'fail', 'message' => trans('user.payment.error')]);
             }
-            $amount = $credit;
+          //  $amount = $credit;
         // 购买服务
         } elseif ($goods_id && self::$method) {
             $goods = Goods::find($goods_id);
@@ -113,7 +119,7 @@ class PaymentController extends Controller
             $activePlan = Order::userActivePlan()->doesntExist();
 
             //　无生效套餐，禁止购买加油包
-            if ($goods->type === 1 && $activePlan) {
+            if ($goods->type === 0 && $activePlan) {
                 return Response::json(['status' => 'fail', 'message' => '购买加油包前，请先购买套餐']);
             }
 
@@ -140,7 +146,7 @@ class PaymentController extends Controller
             //非余额付款下，检查在线支付是否开启
             if (self::$method !== 'credit') {
                 // 判断是否开启在线支付
-                if (! sysConfig('is_onlinePay')) {
+                if ( sysConfig('is_onlinePay')) {
                     return Response::json(['status' => 'fail', 'message' => '订单创建失败：系统并未开启在线支付功能']);
                 }
 
@@ -162,12 +168,13 @@ class PaymentController extends Controller
             }
         }
 
+
         // 生成订单
         try {
             $newOrder = Order::create([
                 'sn' => date('ymdHis').random_int(100000, 999999),
                 'user_id' => auth()->id(),
-                'goods_id' => $credit ? null : $goods_id,
+                'goods_id' =>$credit ? null : $goods_id,
                 'coupon_id' => $coupon->id ?? null,
                 'origin_amount' => $credit ?: $goods->price ?? 0,
                 'amount'=>$amount,

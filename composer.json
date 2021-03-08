@@ -24,6 +24,7 @@
     "laravel-notification-channels/bearychat": "^1.4",
     "laravel-notification-channels/telegram": "^0.5",
     "laravel/framework": "^7.30",
+    "laravel/passport": "9",
     "laravel/tinker": "^2.6",
     "mews/captcha": "^3.2",
     "mews/purifier": "^3.3",

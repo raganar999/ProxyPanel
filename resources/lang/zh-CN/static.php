@@ -5,6 +5,9 @@ return [
     // General
     'login' => '登录',
     'register' => '注册',
+    'usercenter' => '用户中心',
+    'logout' => '退出',
+    
     'homepage'  => '首页',
     'features'  => '功能',
     'price'  => '价格',
@@ -15,6 +18,14 @@ return [
     'help' => '帮助',
     'term' => '使用条款',
     'about_us' => '关于我们',
+    
+    //login &register
+    
+    'email' => '请输入您的邮箱',
+    'password' => '请输入您的密码',
+    'retype_password'=> '请再次输入您的密码',
+    
+    
     
     /* desktop home */
     'dsktp_feature_title_1' => '解锁各类网站，获取不同国家内容',

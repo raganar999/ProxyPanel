@@ -40,19 +40,21 @@ class OrderService
         }
 
         $goods = self::$order->goods;
-        switch ($goods->type) {// 商品为流量或者套餐
-            case 1:// 流量包
+        // 商品为流量或者套餐
+        if ($goods->type == 0) { //流量包
+            
                 $this->activatePackage();
-                break;
-            case 2:// 套餐
+                
+         }elseif ($goods->type > 0) {      
+          
                 if (Order::userActivePlan(self::$user->id)->where('id', '<>', self::$order->id)->exists()) {// 判断套餐是否直接激活
                     $this->setPrepaidPlan();
                 } else {
                     $this->activatePlan();
                 }
                 $this->setCommissionExpense(self::$user); // 返利
-                break;
-            default:
+         }else{
+           
                 Log::warning('【处理订单】出现错误-未知套餐类型');
         }
 

@@ -29,6 +29,9 @@ class OrderObserver
 
             // 本地订单-在线订单 支付成功互联
             if ($changes['status'] === 2 && $order->getOriginal('status') !== 3) {
+                
+               // \Log::debug(88888888888888);
+                
                 (new OrderService($order))->receivedPayment();
             }
         }

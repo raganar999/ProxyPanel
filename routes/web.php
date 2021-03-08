@@ -4,8 +4,8 @@ if (env('APP_KEY') && config('settings')) {
     Route::domain(sysConfig('subscribe_domain') ?: sysConfig('website_url'))
         ->get('s/{code}', 'User\SubscribeController@getSubscribeByCode')->name('sub'); // 节点订阅地址
 
-    Route::domain(sysConfig('website_callback_url') ?: sysConfig('website_url'))
-        ->match(['get', 'post'], 'callback/notify', 'PaymentController@notify')->name('payment.notify'); //支付回调
+  //  Route::domain(sysConfig('website_callback_url') ?: sysConfig('website_url'))
+ //       ->match(['get', 'post'], 'callback/notify', 'PaymentController@notify')->name('payment.notify'); //支付回调
 }
 
 Route::get('callback/checkout', 'Gateway\PayPal@getCheckout')->name('paypal.checkout'); // 支付回调相关
@@ -16,7 +16,7 @@ Route::middleware(['isForbidden', 'affiliate', 'isMaintenance'])->group(function
     Route::get('login', 'AuthController@showLoginForm')->middleware('isSecurity')->name('login'); // 登录页面
     Route::post('login', 'AuthController@login')->middleware('isSecurity'); // 登录
     Route::get('logout', 'AuthController@logout')->name('logout'); // 退出
-    Route::get('register', 'AuthController@showRegistrationForm')->name('register'); // 注册
+   // Route::get('register', 'AuthController@showRegistrationForm')->name('register'); // 注册
     Route::post('register', 'AuthController@register'); // 注册
     Route::match(['get', 'post'], 'reset', 'AuthController@resetPassword')->name('resetPasswd'); // 重设密码
     Route::match(['get', 'post'], 'reset/{token}', 'AuthController@reset')->name('resettingPasswd'); // 重设密码

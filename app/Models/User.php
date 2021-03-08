@@ -16,7 +16,7 @@ use Laravel\Passport\HasApiTokens;
 /**
  * 用户信息.
  */
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable 
 {
     use HasApiTokens, Notifiable, HasRoles;
 

@@ -77,8 +77,14 @@
             </div>
         </footer> -->
         @endif
+        
+   
 
     </div> <!-- ./end wrappers -->
+
+
+
+
 
 <div class="jump-page-top" aria-label="Jump up to top of the page"><i class="fa fa-arrow-up" aria-hidden="true"></i>
 </div>
@@ -95,7 +101,7 @@
 
                 <div class="auth-content">
                     <div class="modal-tab">
-                        <span>Sign in</span>
+                        <span>{{ __('static.login') }}</span>
                     </div>
 
                      @if(Session::get('errorLoginMsg'))
@@ -104,19 +110,26 @@
                             <span> {{Session::get('errorLoginMsg')}} </span>
                         </div>
                     @endif
+                    
+                     @if(Session::get('successMsg'))
+                        <div class="alert alert-danger">
+                            <!-- <button class="close" data-close="alert"></button> -->
+                            <span> {{Session::get('successMsg')}} </span>
+                        </div>
+                    @endif
                    
                     <form action="{{url('login')}}" class="form--signin" method="post">
                         <div class="md-form">
                             <i class="icon-user"></i>
-                            <input type="text" id="email" class="form-control" autocomplete="off" placeholder="{{__('login.username')}}" name="email" value="{{Request::old('username')}}" required>
+                            <input type="text" id="email" class="form-control" autocomplete="off" placeholder="{{__('static.email')}}" name="email" value="{{Request::old('email')}}" required>
                         </div>
                         <div class="md-form">
                             <i class="icon-lock"></i>
-                            <input type="password" id="pass" class="form-control" autocomplete="off" placeholder="{{__('login.password')}}" name="password" value="{{Request::old('password')}}" required>
+                            <input type="password" id="pass" class="form-control" autocomplete="off" placeholder="{{__('static.password')}}" name="password" value="{{Request::old('password')}}" required>
                         </div>
                         <input type="hidden" name="_token" value="{{csrf_token()}}" />
 
-                        <button  type="submit" class="cs-btn cs-btn--primary">Sign in</button>
+                        <button  type="submit" class="cs-btn cs-btn--primary">{{ __('static.login') }}</button>
 
                         <div class="form-bottom">
                             <div class="custom-control custom-checkbox">
@@ -128,7 +141,7 @@
                       
                         @if(sysConfig('is_register'))
                         <div class="form-link text-center">
-                            <a href="javascript:void(0)" class="modal-trigger" data-modal="#signupModal">SignUp</a>
+                            <a href="javascript:void(0)" class="modal-trigger" data-modal="#signupModal">还没有账号，去{{ __('static.register') }}</a>
                         </div>
                         @endif
                         
@@ -154,8 +167,9 @@
                 <div class="auth-content">
 
                     <div class="modal-tab">
-                        <span>Sign Up</span>
+                        <span>{{ __('static.register') }}</span>
                     </div>
+               
                     @if(Session::get('errorRegMsg'))
                         <div class="alert alert-danger">
                             <!-- <button class="close" data-close="alert"></button> -->
@@ -171,19 +185,19 @@
 
                         <div class="md-form">
                             <i class="icon-user"></i>
-                            <input type="text" id="signup_email" class="form-control" autocomplete="off" placeholder="{{__('register.username_placeholder')}}" name="username" value="{{Request::old('username')}}" required>
+                            <input type="text" id="signup_email" class="form-control" autocomplete="off" placeholder="{{__('static.email')}}" name="email" value="{{Request::old('email')}}" required>
                         </div>
                         <div class="md-form">
                             <i class="icon-lock"></i>
-                            <input type="password" id="signup_pass" class="form-control"  autocomplete="off" placeholder="{{__('register.password')}}" name="password" value="{{Request::old('password')}}" required>
+                            <input type="password" id="signup_pass" class="form-control"  autocomplete="off" placeholder="{{__('static.password')}}" name="password" value="{{Request::old('password')}}" required>
                         </div>
                         <div class="md-form">
                             <i class="icon-lock"></i>
-                            <input type="password" id="signup_pass_2" class="form-control"  autocomplete="off" placeholder="{{__('register.retype_password')}}" name="repassword" value="{{Request::old('repassword')}}" required>
+                            <input type="password" id="signup_pass_2" class="form-control"  autocomplete="off" placeholder="{{__('static.retype_password')}}" name="repassword" value="{{Request::old('repassword')}}" required>
                         </div>
 
                         @if(sysConfig('is_register'))
-                            <button type="submit" class="cs-btn cs-btn--primary">Sign Up</button>
+                            <button type="submit" class="cs-btn cs-btn--primary">{{ __('static.register') }}</button>
                         @endif
 
                         <div class="form-bottom">
@@ -203,6 +217,8 @@
         </div>
     </div>
 </div>
+
+
 
 <!-- Password reset Modal -->
 <div class="modal fade" id="resetpassModal" tabindex="-1" role="dialog" aria-labelledby="resetpassModal" aria-hidden="true">
@@ -242,6 +258,54 @@
     </div>
 </div>
 
+
+<!-- login sucess  Modal -->
+<div class="modal fade" id="noticeModal" tabindex="-1" role="dialog" aria-labelledby="noticeModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+
+            <div class="modal-body">
+                <div class="auth-content">
+
+                    
+                    
+                    
+                   
+                        
+                        
+                    @if(Session::get('LoginSuccessMsg'))
+                        
+                     <div class="alert alert-danger ">
+                         
+                         <span> {{Session::get('LoginSuccessMsg')}} </span>
+                            <!-- <button class="close" data-close="alert"></button> -->
+                        </div>
+                        
+
+                      
+
+
+                        
+                    @endif
+
+
+                    
+                        
+                    <div class="form-link text-center">
+                            <a href="" class="modal-trigger" data-dismiss="modal">知道了</a>
+                     </div>
+                       
+                        
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @yield("footer-script")
 
 <!-- <script src="{{ asset('assets/static/desktop/js/login.js') }}"></script>  -->
@@ -254,6 +318,8 @@
                 $(this).modal('show');
             }
         });
+        
+       
 
         $('.form--signup').on('submit', function(e) {
             e.preventDefault();
@@ -269,9 +335,14 @@
             }
 
         });
+        
+       
     });
-</script>
 
+   					
+</script>
+ 
+ 
 </body>
 
 </html>

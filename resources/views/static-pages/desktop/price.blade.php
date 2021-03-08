@@ -63,21 +63,23 @@
                                       @if($package->is_hot)
                                         <a href="#" class="price-item price-item--hot selected">
                                             <div class="fire-ball">Hot</div>
-                                            <h2 class="price-item__time" data-package-name= {{$package->name}} >{{$package->name}}</h2>
-                                        <p class="price-item__value" data-package-price= {{$package->price}}><span>$</span>{{$package->price}}</p>
-                                        <p class="price-item__id" data-package-sku= {{$package->id}}   style="display: none" ><span>$</span>{{$package->id}}</p>
-                                        <div class="price-item__duration">{{$package->name}}</div>
-                                        <div class="price-item__subtext">$ 0.99 billed every 1 Day</div>
+                                        <h2 class="price-item__time" data-package-name={{$package->name}} >{{$package->name}}</h2>
+                                        <p class="price-item__value" data-package-price= {{$package->price}} >${{$package->price}}</p>
+                                        <p class="price-item__id" data-package-id= {{$package->id}}   >{{$package->days}}Days</p>
+                                        <p class="price-item__id"   >无限流量，不限速</p>
+                                        <div class="price-item__duration">设备数：{{$package->usage}}，速度：高清</div>
+                                       
+                                        <div class="price-item__subtext">VIP流量每30天重置</div>
                                       </a>
                                       @else
                                         <a href="#" class="price-item">
                                         <h2 class="price-item__time" data-package-name={{$package->name}} >{{$package->name}}</h2>
                                         <p class="price-item__value" data-package-price= {{$package->price}} >${{$package->price}}</p>
-                                        <p class="price-item__id" data-package-id= {{$package->days}}   >{{$package->days}}Days</p>
-                                        <p class="price-item__id" data-package-id= {{$package->days}}   >无限流量，不限速</p>
+                                        <p class="price-item__id" data-package-id= {{$package->id}}   >{{$package->days}}Days</p>
+                                        <p class="price-item__id"   >无限流量，不限速</p>
                                         <div class="price-item__duration">设备数：{{$package->usage}}，速度：高清</div>
                                        
-                                        <div class="price-item__subtext">流量每30天重置</div>
+                                        <div class="price-item__subtext">VIP流量每30天重置</div>
                                       </a>
                                       @endif
 

@@ -53,7 +53,7 @@ $(function () {
                     amount: totalPrice,
                     goods_id: packageSku,
                     method: 'stripe',
-                    coupon_sn: 2001,
+                    
                     pay_type: 'alipay',
                     pay_mode:'intent'
                 })
@@ -107,7 +107,7 @@ $(function () {
                 amount: totalPrice,
                 goods_id: packageSku,
                 method: 'stripe',
-                coupon_sn: 2001,
+                
                 pay_type: 'card',
                 pay_mode:'intent'
               //  sku: packageSku,

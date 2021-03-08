@@ -10,7 +10,7 @@
     <title>{{sysConfig('website_name')}}</title>
     <meta name="keywords" content="">
     @yield('header-script')
-    <link rel="shortcut icon" href="build//rita.ico">
+  
 </head>
 
 <body>
@@ -44,8 +44,8 @@
                     @if (Auth::check())
                     <div class="page-header__auth-info {{ (Request::segment(1) === 'vpn-apps' || Request::segment(1) === 'price' || Request::segment(2) === 'payment-success' || Request::segment(1) === 'contact') ? ' page-header__auth-info--dark' : '' }}">
                         <ul class="auth-list">
-                            <li><a href="{{url('usercenter')}}"> {{Auth::user()->username}}</a></li>
-                            <li><a href="{{url('logout')}}">Logout</a></li>
+                            <li><a href="{{url('usercenter')}}">{{ __('static.usercenter') }}</a></li>
+                            <li><a href="{{url('logout')}}">{{ __('static.logout') }}</a></li>
                         </ul>
                     </div>
                     @endif

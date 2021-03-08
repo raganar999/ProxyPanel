@@ -88,6 +88,7 @@
                         <th> 优惠券</th>
                         <th> 原价</th>
                         <th> 实价</th>
+                        <th> 支付渠道</th>
                         <th> 支付方式</th>
                         <th> 订单状态</th>
                         <th> 创建时间</th>
@@ -116,6 +117,9 @@
                             <td> ¥{{$order->amount}} </td>
                             <td>
                                 <span class="badge badge-lg badge-info"> {{$order->pay_way_label}} </span>
+                            </td>
+                             <td>
+                                <span class="badge badge-lg badge-info"> {{$order->pay_type}} </span>
                             </td>
                             <td>
                                 @if($order->status === -1)

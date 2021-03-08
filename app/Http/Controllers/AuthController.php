@@ -40,7 +40,7 @@ class AuthController extends Controller
                 return Redirect::route('admin.index');
             }
 
-            return Redirect::route('home');
+            return Redirect::route('usercenter');
         }
 
         return view('auth.login');
@@ -51,6 +51,9 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), ['email' => 'required|email', 'password' => 'required']);
 
         if ($validator->fails()) {
+             Session::flash('errorRegMsg', '请输入正确的用户名和密码');
+             
+              
             return Redirect::back()->withInput()->withErrors($validator->errors());
         }
 
@@ -62,6 +65,7 @@ class AuthController extends Controller
 
         // 验证账号并创建会话
         if (! Auth::attempt($validator->validated(), $request->input('remember'))) {
+            Session::flash('errorLoginMsg', '请输入正确的用户名和密码');
             return Redirect::back()->withInput()->withErrors(trans('auth.error.login_failed'));
         }
         $user = Auth::getUser();
@@ -97,8 +101,13 @@ class AuthController extends Controller
 
         // 更新登录信息
         $user->update(['last_login' => time()]);
+        
+      // 根据权限跳转
+       if ($user->hasPermissionTo('admin.index')) {
+                return Redirect::route('admin.index');
+            }
 
-        return redirect()->back();
+        return Redirect::back()->with('LoginSuccessMsg','登录成功');
     }
 
     // 校验验证码
@@ -175,7 +184,7 @@ class AuthController extends Controller
     {
         Auth::logout();
 
-        return Redirect::route('login');
+        return Redirect::route('home');
     }
 
     public function showRegistrationForm()
@@ -184,27 +193,37 @@ class AuthController extends Controller
 
         return view('auth.register', ['emailList' => (int) sysConfig('is_email_filtering') !== 2 ? false : EmailFilter::whereType(2)->get()]);
     }
-
-    // 注册
-    public function register(RegisterRequest $request)
+// 注册
+    public function register(Request $request)
     {
         $cacheKey = 'register_times_'.md5(IP::getClientIp()); // 注册限制缓存key
 
         $validator = Validator::make($request->all(), [
-            'username' => 'required',
-            'email'    => 'required|email|unique:user',
-            'password' => 'required|min:6|confirmed',
-            'term'     => 'accepted',
+            'email' => 'required',
+            'password' => 'required',
+           // 'email'    => 'required|email|unique:user',
+          //  'password' => 'required|min:6|confirmed',
+           // 'term'     => 'accepted',
         ]);
 
         if ($validator->fails()) {
+            Session::flash('errorRegMsg', '请输入合法的用户名和密码');
+          //   \Log::debug(222);
             return Redirect::back()->withInput()->withErrors($validator->errors());
         }
-        $data = $request->validated();
-        $register_token = $request->input('register_token');
-        $code = $request->input('code');
-        $verify_code = $request->input('verify_code');
-        $aff = $request->input('aff');
+     //  $data = $request->validated();
+     //   $register_token = $request->input('register_token');
+     //   $code = $request->input('code');
+     //   $verify_code = $request->input('verify_code');
+    //    $aff = $request->input('aff');
+    
+            $username = $request->input('email');
+            $email = $request->input('email');
+            $password = $request->input('password');
+            $register_token = $request->input('register_token');
+            $code = $request->input('code');
+            $verify_code = $request->input('verify_code');
+            $aff = (int) $request->input('aff');
 
         // 防止重复提交
         if ($register_token !== Session::get('register_token')) {
@@ -280,7 +299,7 @@ class AuthController extends Controller
         $transfer_enable = MB * ((int) sysConfig('default_traffic') + ($inviter_id ? (int) sysConfig('referral_traffic') : 0));
 
         // 创建新用户
-        $user = Helpers::addUser($data['email'], $data['password'], $transfer_enable, sysConfig('default_days'), $inviter_id, $data['username']);
+        $user =  Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id);
 
         // 注册失败，抛出异常
         if (! $user) {
@@ -331,8 +350,10 @@ class AuthController extends Controller
             Session::flash('successMsg', trans('auth.register.success'));
         }
 
-        return Redirect::route('login')->withInput();
+       
+            return Redirect::back()->withInput()->with('successMsg', '注册成功，请登录');
     }
+
 
     //邮箱检查
     private function emailChecker($email, $returnType = 0)

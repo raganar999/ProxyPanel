@@ -53,7 +53,14 @@
                                 <label class="col-md-2 col-form-label" for="price">售价</label>
                                 <div class="col-md-4 input-group">
                                     <input type="number" class="form-control" name="price" id="price" step="0.01" required/>
-                                    <span class="input-group-text">元</span>
+                                    <span class="input-group-text">美元</span>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-2 col-form-label" for="usage">设备数</label>
+                                <div class="col-md-4 input-group">
+                                    <input type="number" class="form-control" name="usage" id="usage"  required/>
+                                    <span class="input-group-text">台</span>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -194,6 +201,7 @@
         type.attr('disabled', true);
         $('#name').val('{{$good->name}}');
         $('#price').val('{{$good->price}}');
+        $('#usage').val('{{$good->usage}}');
         $('#level').selectpicker('val', '{{$good->level}}');
           @if ($good->type == 2)
           $('#renew').val('{{$good->renew}}');
@@ -236,6 +244,8 @@
         $("input[name='type'][value='{{old('type')}}']").click();
         $('#name').val('{{old('name')}}');
         $('#price').val('{{old('price')}}');
+        $('#usage').val('{{old('usage')}}');
+        
         $('#level').selectpicker('val', '{{old('level')}}');
           @if (old('type') == 2)
           $('#renew').val('{{old('renew',0)}}');
