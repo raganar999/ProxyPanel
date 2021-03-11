@@ -146,7 +146,7 @@ class UsersController extends Controller
       
         $score_traffic = mt_rand(self::$systemConfig['min_rand_traffic'], self::$systemConfig['max_rand_traffic']);
         
-      if (Auth::user()->expire_time < date("Y-m-d H:i:s")) {
+      if (Auth::user()->expired_at < date("Y-m-d H:i:s")) {
       	//获取随机时间
       	$score_time    = mt_rand(self::$systemConfig['min_rand_time'], self::$systemConfig['max_rand_time']);
       	//计算赠送后的到期时间
@@ -154,7 +154,7 @@ class UsersController extends Controller
       	
       	$ret_traffic_ok   = User::query()->where('id', Auth::user()->id)->increment('transfer_enable', $score_traffic * 1048576);
        
-        $ret_time_ok   = User::query()->where('id', Auth::user()->id)->update(['expire_time' => $ret_time, 'enable' => 1]);
+        $ret_time_ok   = User::query()->where('id', Auth::user()->id)->update(['expired_at' => $ret_time, 'enable' => 1]);
       	
       }else{
       	
@@ -168,7 +168,7 @@ class UsersController extends Controller
         
         if ($ret_traffic_ok ) {
         	 // 写入用户流量变动记录
-            Helpers::addUserTrafficModifyLog(Auth::user()->id, 0, Auth::user()->transfer_enable, Auth::user()->transfer_enable + $score_traffic * 1048576, '[签到]');
+           // Helpers::addUserTrafficModifyLog(Auth::user()->id, 0, Auth::user()->transfer_enable, Auth::user()->transfer_enable + $score_traffic * 1048576, '[签到]');
          
         
         // 多久后可以再签到
@@ -217,6 +217,40 @@ class UsersController extends Controller
 	    return response()->json($response);
 	    
 	}	
+	
+	
+	 public function nodeList(int $id = null)
+    {
+        $user = auth()->user();
+        $nodes = $user->nodes()->get();
+        if (isset($id)) {
+            $node = $nodes->find($id);
+
+            if (empty($node)) {
+                return response()->json([], 204);
+            }
+
+            return response()->json($node->config($user));
+        }
+        $servers = [];
+        foreach ($nodes as $node) {
+            $servers[] = $node->config($user);
+        }
+
+       
+    	$response['error_code'] = 0;
+    	$response['message']    = '获取配置和线路成功';
+    	$response['message_level']    = 'alert';
+    	$response['data']       = [
+    		
+    
+    		'server_list'     => $servers
+    		
+    		];
+    	
+	    return response()->json($response);
+    }
+
 
 	public function userStatus(){
 
@@ -321,7 +355,33 @@ class UsersController extends Controller
 
 
      
-
+   
+     public function orderList(){
+     	
+     	 $user = User::where('id', Auth::id())->first();
+     	 $puerchased_services = Order::query()->where('user_id', $user->id)->get();
+     	 $data = [];
+     	 foreach ($puerchased_services as $service) {
+     	    $row                    = [];
+            $row['service_name']     = '';
+     	   	$row['service_price']    = $service->amount;
+     	   	$row['created_ate']      = $service->created_at;
+     	   	$row['expire_at']        = $service->expire_at;
+     	   	$row['is_expire']        = $service->is_expire;
+     	    array_push($data , $row);
+     	   
+     	   
+     	   }
+     	   
+     	  	$response['error_code'] = 0;
+        	$response['message']    = '获取已购买的服务成功';
+        	$response['data']       = $data;
+        	
+		    return response()->json($response) ;
+     	   
+     	
+     	
+     }
 
 
 

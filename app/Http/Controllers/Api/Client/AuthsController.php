@@ -106,9 +106,10 @@ class AuthsController extends Controller
             $transfer_enable = MB * ((int) sysConfig('default_traffic') + ($inviter_id ? (int) sysConfig('referral_traffic') : 0));
 
            
-
+          
             // 创建新用户
-            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id);
+            $user_type = 0;
+            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id, $user_type);
            //  \Log::debug($user);
             // 注册失败，抛出异常
             if (! $user) {
@@ -218,7 +219,7 @@ class AuthsController extends Controller
     }
     public function updatePasswordWithCode(Request $request){
         $validator = Validator::make($request->all(), [
-            'username'     => 'required|email',
+            'email'     => 'required|email',
             'new_password' => 'required',
             'code'        => 'required'
 
@@ -235,13 +236,13 @@ class AuthsController extends Controller
         }
 
 
-        $verifyCode = VerifyCode::query()->where('username', $request->username)->where('code', $request->code)->where('status', 0)->first();
+        $verifyCode = VerifyCode::query()->where('email', $request->email)->where('code', $request->code)->where('status', 0)->first();
         if ($verifyCode) {
-            $user = User::where('username', $request->username)->first();
-            $user->password = Hash::make($request->new_password);
+            $user = User::where('email', $request->email)->first();
+            $user->password = $request->new_password;
             $user->save();
             if ($user) {
-                $verifyCode = VerifyCode::query()->where('username', $request->username)->where('code', $request->code)->where('status', 0)->first();
+                $verifyCode = VerifyCode::query()->where('email', $request->email)->where('code', $request->code)->where('status', 0)->first();
                 $verifyCode->status = 1; 
                 $verifyCode->save(); 
 
@@ -280,26 +281,26 @@ class AuthsController extends Controller
         }
     
            $user = User::where('id', Auth::id())->first();
-           $verifyCode = VerifyCode::query()->where('username', $user->username)->where('code', $request->code)->where('status', 0)->first();
+           $verifyCode = VerifyCode::query()->where('email', $user->email)->where('code', $request->code)->where('status', 0)->first();
         
-        if ($user->user_type == 1 && $verifyCode) {
-            $user->username  = $request->new_username;
-            $user->user_type = 2;
-            $user->password  = Hash::make($request->new_password);
+        if ($user->type == 0 && $verifyCode) {
+            $user->email  = $request->new_username;
+            $user->type = 1;
+            $user->password  = $request->new_password;
             $user->save();
            
             if ($user) {
                 
                
             	// 失效已使用的验证码，这里会有bug ，如果在这个过程当中用户再来获取验证码，会有执行错误出现。
-                $verifyCode = VerifyCode::query()->where('username', $user->username)->where('code', $request->code)->where('status', 0)->first();
+                $verifyCode = VerifyCode::query()->where('code', $request->code)->where('status', 0)->first();
                 $verifyCode->status = 1; 
                 $verifyCode->save(); 
             	
             	
                 $response['error_code'] = 0;
                 $response['message']    = '升级为注册用户成功';
-                $response['data']       = ['user_type' => $user->user_type]; //not clear
+                $response['data']       = ['user_type' => $user->type]; //not clear
                 return response()->json($response);
                     
             }else{
@@ -323,9 +324,9 @@ class AuthsController extends Controller
 
    }
 
-   public function sendCodeAPI(Request $request)
+   public function sendCode(Request $request)
     {
-        $email = trim($request->post('email'));
+        $email = $request->email;
 
         if (!$email) {
             $response['error_code'] = null;

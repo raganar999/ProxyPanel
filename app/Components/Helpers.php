@@ -73,7 +73,7 @@ class Helpers
      * @param  string|null  $username  昵称
      * @return User
      */
-    public static function addUser(string $email, string $password, int $transfer_enable, int $date = null, int $inviter_id = null, string $username = null): User
+    public static function addUser(string $email, string $password, int $transfer_enable, int $date = null, int $inviter_id = null,  int $user_type = 1, string $username = null ): User
     {
         return User::create([
             'username'        => $username ?? $email,
@@ -90,6 +90,7 @@ class Helpers
             'user_group_id'   => null,
             'reg_ip'          => IP::getClientIp(),
             'inviter_id'      => $inviter_id,
+            'type'            => $user_type,
         ]);
     }
 
