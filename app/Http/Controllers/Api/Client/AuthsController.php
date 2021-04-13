@@ -144,7 +144,8 @@ class AuthsController extends Controller
             		'token_type'   =>  'Bearer',
                 	'access_token' => $tokenResult->accessToken,
                 	'expire_in'    => date("Y-m-d H:i:s" , strtotime($tokenResult->token->expires_at) ),
-                	'refresh_token' =>  ''
+                	'refresh_token' =>  '',
+                	 'uuid'        => $user->vmess_id
                 ]; 
                $response['client_config'] = json_decode($this->getClientConfig()) ;
                
@@ -171,7 +172,8 @@ class AuthsController extends Controller
                 'token_type'   =>  'Bearer',
                 'access_token' => $tokenResult->accessToken,
                 'expire_in'    => $tokenResult->token->expires_at,
-                'refresh_token' =>  ''
+                'refresh_token' =>  '',
+                'uuid'        => $user->vmess_id
             ]; 
             
             
@@ -510,7 +512,111 @@ class AuthsController extends Controller
      
       //生成客户端的smart 模式的配置文件
       private function getClientConfig(){
-      	 $client_config = '{"api":{"services":["HandlerService","StatsService"],"tag":"api"},"stats":{},"inbound":{"port":443,"protocol":"vmess","settings":{"clients":[]},"sniffing":{"enabled": true,"destOverride": ["http","tls"]},"streamSettings":{"network":"tcp"},"tag":"proxy"},"inboundDetour":[{"listen":"0.0.0.0","port":23333,"protocol":"dokodemo-door","settings":{"address":"0.0.0.0"},"tag":"api"}],"log":{"loglevel":"debug","access":"access.log","error":"error.log"},"outbound":{"protocol":"freedom","settings":{}},"outboundDetour":[{"protocol":"blackhole","settings":{},"tag":"block"}],"routing":{"rules":[{"inboundTag":"api","outboundTag":"api","type":"field"}]},"policy":{"levels":{"0":{"handshake":4,"connIdle":300,"uplinkOnly":5,"downlinkOnly":30,"statsUserUplink":true,"statsUserDownlink":true}}}}';
+      	 $client_config = '{
+  "stats":{},
+  "log": {
+    "loglevel": "warning"
+  },
+  "policy":{
+      "levels": {
+        "8": {
+          "handshake": 4,
+          "connIdle": 300,
+          "uplinkOnly": 1,
+          "downlinkOnly": 1
+        }
+      },
+      "system": {
+        "statsOutboundUplink": true,
+        "statsOutboundDownlink": true
+      }
+  },
+  "inbounds": [{
+    "tag": "socks",
+    "port": 10808,
+    "protocol": "socks",
+    "settings": {
+      "auth": "noauth",
+      "udp": true,
+      "userLevel": 8
+    },
+    "sniffing": {
+      "enabled": true,
+      "destOverride": [
+        "http",
+        "tls"
+      ]
+    }
+  },
+  {
+    "tag": "http",
+    "port": 10809,
+    "protocol": "http",
+    "settings": {
+      "userLevel": 8
+    }
+  }
+],
+  "outbounds": [{
+    "tag": "proxy",
+    "protocol": "vmess",
+    "settings": {
+      "vnext": [
+        {
+          "address": "v2ray.cool",
+          "port": 10086,
+          "users": [
+            {
+              "id": "a3482e88-686a-4a58-8126-99c9df64b7bf",
+              "alterId": 64,
+              "security": "auto",
+              "level": 8
+            }
+          ]
+        }
+      ],
+      "servers": [
+        {
+        "address": "v2ray.cool",
+        "method": "chacha20",
+        "ota": false,
+        "password": "123456",
+        "port": 10086,
+        "level": 8
+      }
+      ]
+    },
+    "streamSettings": {
+      "network": "tcp"
+    },
+    "mux": {
+      "enabled": false
+    }
+  },
+  {
+    "protocol": "freedom",
+    "settings": {},
+    "tag": "direct"
+  },
+  {
+    "protocol": "blackhole",
+    "tag": "block",
+    "settings": {
+      "response": {
+        "type": "http"
+      }
+    }
+  }
+  ],
+  "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": []
+  },
+  "dns": {
+      "hosts": {},
+      "servers": []
+  }
+}';
 
         return $client_config;
       }

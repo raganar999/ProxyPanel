@@ -17,6 +17,12 @@ class Node extends Model
     protected $table = 'node';
     protected $guarded = [];
 
+   
+   public function nodeGroup(): BelongsTo
+    {
+        return $this->belongsTo(NodeGroup::class);
+    }
+   
     public function labels()
     {
         return $this->belongsToMany(Label::class);
@@ -61,6 +67,8 @@ class Node extends Model
     {
         return $this->belongsTo(RuleGroup::class);
     }
+    
+   
 
     public function userGroups(): BelongsToMany
     {
@@ -108,14 +116,21 @@ class Node extends Model
             'id'    => $this->id,
             'name'  => $this->name,
             'host'  => $this->host,
-            'group' => sysConfig('website_name'),
+            'network'  => $this->network  / 100,
+            'load'  => $this->load / 100,
+            'group_id' => $this->group_id,
+            'group_name' => NodeGroup::whereGroupId($this->group_id)->value('group_name'),
+            'recommend' => $this->recommend,
+            'tag'   => $this->tag ,
+            'Weights' =>  $this-> Weights,
+            
         ];
         switch ($this->type) {
             case 2:
                 $config = array_merge($config, [
                     'type'        => 'v2ray',
                     'port'        => $this->is_relay ? $this->relay_port : $this->v2_port,
-                    'uuid'        => $user->vmess_id,
+                  //  'uuid'        => $user->vmess_id,
                     'method'      => $this->v2_method,
                     'v2_alter_id' => $this->v2_alter_id,
                     'v2_net'      => $this->v2_net,

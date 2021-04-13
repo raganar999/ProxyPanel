@@ -72,8 +72,9 @@ Route::group(['middleware' => ['auth:api','checkPostPara']], function() {
     Route::get('user/ver1/refreshstatus','Api\Client\UsersController@refreshStatus');
     Route::post('user/ver1/updateuser','Api\Client\AuthsController@updateUser');
     Route::post('user/ver1/buy','Api\Client\Buycontroller@create');
-    Route::get('user/ver1/serverlist','Api\Client\UsersController@serverList');
+    Route::get('user/ver1/serverlist','Api\Client\UsersController@nodeList');
     Route::get('user/ver1/nodelist','Api\Client\UsersController@nodeList');
+    Route::get('user/ver1/term','Api\Client\UsersController@term');
     Route::get('user/ver1/userstatus','Api\Client\UsersController@userStatus');
     Route::get('user/ver1/goodslist','Api\Client\UsersController@goodslist');
     Route::get('user/ver1/orderlist','Api\Client\UsersController@orderList');

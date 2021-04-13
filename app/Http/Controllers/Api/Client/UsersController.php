@@ -12,6 +12,7 @@ use App\Models\SysConfig;
 use App\Models\SsNode;
 use App\Models\SsNodeIp;
 use App\Models\User;
+use App\Models\Article;
 use App\Models\Goods;
 use App\Models\OrderGoods;
 use App\Models\Payment;
@@ -57,6 +58,37 @@ class UsersController extends Controller
 	    // return '111';
         return Auth::id();
 	}
+	
+	public function term(){
+		
+	
+			$term = Article::orderBy('sort', 'desc')->first();
+	
+        if ($term) {
+
+        	$response['error_code'] = 1;
+        	$response['message']    = 'Get term successfully';
+        	$response['data']        =   [
+               
+                   'term' =>  $term->content,
+                
+            ]; 
+		    return response()->json([
+		    	'success' => $response
+		    ]);
+        }else{
+
+        	$response['error_code'] = null;
+        	$response['message']    = '';
+
+		    return response()->json([
+		    	'error' => $response
+		    ]);
+        }
+	}
+    
+	
+	
 	
 	
 	public function logUpload(Request $request){
@@ -237,13 +269,29 @@ class UsersController extends Controller
             $servers[] = $node->config($user);
         }
 
+
+	        $row  = [];
+			$row["user_enable"]        = $user->enable;
+		//	$row["user_type"]          = $user->user_type;
+		
+
+			$row["vipTraffic"]         = flowAutoShow($user->transfer_enable);
+			$row["vipUsedTraffic"]     = flowAutoShow($user->u + $user->d);
+			$row["expireTime"]         = $user->expired_at;
+		//	$row["allow_devices_num"]  = $user->usage;
+		//	$row["vmess_id"]           = $user->vmess_id;
+		//	$row["resetday"]           = $user->traffic_reset_day;
+		//    $row["speed_level"] = flowAutoShow($user->speed_limit_per_con);
+		   
+
+
        
     	$response['error_code'] = 0;
-    	$response['message']    = '获取配置和线路成功';
+    	$response['message']    = 'Get the server list successfully';
     	$response['message_level']    = 'alert';
     	$response['data']       = [
     		
-    
+            'user_status'     => $row ,
     		'server_list'     => $servers
     		
     		];
@@ -254,30 +302,33 @@ class UsersController extends Controller
 
 	public function userStatus(){
 
-		$user = User::where('id', Auth::id())->first();
+		$user = auth()->user();
 		if ($user) {
 			
 		
 			$row                       = [];
 			$row["user_enable"]        = $user->enable;
-			$row["user_type"]          = $user->user_type;
+		//	$row["user_type"]          = $user->user_type;
 		
 
-			$row["Traffic"]         = flowAutoShow($user->transfer_enable);
-			$row["usedTraffic"]     = flowAutoShow($user->u + $user->d);
-			$row["expire_date"]        = $user->expire_time;
-			$row["allow_devices_num"]  = $user->usage;
-			$row["vmess_id"]           = $user->vmess_id;
-			$row["resetday"]           = $user->traffic_reset_day;
-		    $row["speed_limit_per_con"] = flowAutoShow($user->speed_limit_per_con);
-		
+			$row["vipTraffic"]         = flowAutoShow($user->transfer_enable);
+			$row["vipUsedTraffic"]     = flowAutoShow($user->u + $user->d);
+			$row["expireDate"]         = $user->expire_time;
+		//	$row["allow_devices_num"]  = $user->usage;
+		//	$row["vmess_id"]           = $user->vmess_id;
+		//	$row["resetday"]           = $user->traffic_reset_day;
+		//    $row["speed_level"] = flowAutoShow($user->speed_limit_per_con);
+		   
 		
 		}
 
 
+      
+
+
 		if ($user) {
         	$response['error_code'] = 0;
-        	$response['message']    = '获取用户状态成功';
+        	$response['message']    = 'Get user status successfully ';
         	$response['data']       = $row ;
         	
 		    return response()->json($response);
@@ -390,82 +441,7 @@ class UsersController extends Controller
 
     
     
-     private function getServerList($userId){
-     	    
-     	    $SsGroups  = SsGroup::all();
-     	    
-     	    $server_groups = [];
-     
-		    foreach ($SsGroups as $ssgroup) {
-			$row                  = [];
-			$row['server_group_id']     = $ssgroup->id;
-			$row['server_group_name']   = $ssgroup->name;
-			$row['server_group_sort']   = $ssgroup->sort;
-		  
-		 
-			//$row['v2_vmess_id']   = $ssnode->v2_vmess_id;
-		//	$row['v2_alter_id']   = $ssnode->v2_alter_id;
-		//	$row['v2_net']        = $ssnode->v2_net;
-		//	$row['v2_type']       = $ssnode->v2_type;
-		//	$row['v2_host']       = $ssnode->v2_host;
-	    //	$row['v2_path']       = $ssnode->v2_path;
-		//	$row['v2_tls']        = $ssnode->v2_tls;
-		
-			array_push($server_groups, $row);
-	    	}
-     	    
-			
-	   
-	   
-	        $outbounds  =  [];
-	  
-	        $outbound['protocol_type']   = 2;
-	        $outbound['protocol']   = 'vmess';
-	        $outbound['alterId']    = 0;
-	        $outbound['security']   = 'chacha20-poly1305';
-	        $outbound['mux']        = 'false';
-	        $outbound['nework']     = 'ws';
-	        $outbound['path']       = '/fb';
-	        $outbound['security']   = 'tls';
-	        $outbound['allowInsecure']   = 'true';
-	        array_push($outbounds , $outbound);
-	
-	    	$label_ids 	= UserLabel::where('user_id',  $userId )->pluck('label_id')->toArray();
-	    	$node_ids 	= SsNodeLabel::whereIn('label_id', $label_ids)->pluck('node_id')->toArray();
-	    	$SsNodes    = SsNode::whereIn('id', $node_ids)->get();
-		
-	    	$server_list = [];
-		    foreach ($SsNodes as $ssnode) {
-			$row                  = [];
-			$row['server_name']   = $ssnode->name;
-			$row['protocol_type'] = $ssnode->type;
-			$row['server_group_id'] = $ssnode->group_id;
-			$row['server_sort']    = $ssnode->sort;
-			$row['server_domain']   = $ssnode->server;
-			$row['server_ip']     = $ssnode->ip;
-			$row['server_port']   = $ssnode->v2_port;
-			$row['server_rate']   = $ssnode->traffic_rate;
-		    $row['server_desc']   = $ssnode->desc;
-		    $row['country_code']   = $ssnode->country_code;
-		    $row['server_load']   = 0.3; //负载状态
-		    $row['default_server']   = 1; //是否为默认服务器，客户端根据所有的默认服务器，选择一个负载最小的
-			//$row['v2_vmess_id']   = $ssnode->v2_vmess_id;
-		//	$row['v2_alter_id']   = $ssnode->v2_alter_id;
-		//	$row['v2_net']        = $ssnode->v2_net;
-		//	$row['v2_type']       = $ssnode->v2_type;
-		//	$row['v2_host']       = $ssnode->v2_host;
-	    //	$row['v2_path']       = $ssnode->v2_path;
-		//	$row['v2_tls']        = $ssnode->v2_tls;
-		
-			array_push($server_list, $row);
-	    	}
-     	
-     	 return [
-            'server_groups' => $server_groups,
-            'outbounds'     => $outbounds,
-            'server_list'   => $server_list
-        ];
-     }
+   
      
     
 }
