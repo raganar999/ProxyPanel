@@ -123,6 +123,7 @@ class Node extends Model
             'recommend' => $this->recommend,
             'tag'   => $this->tag ,
             'Weights' =>  $this-> Weights,
+            'country_code' => $this->country_code,
             
         ];
         switch ($this->type) {

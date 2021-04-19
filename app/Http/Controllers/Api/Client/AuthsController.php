@@ -54,6 +54,9 @@ class AuthsController extends Controller
 	
     public function autoRegister(Request $request)
     {
+         //   $test99=$request->all();
+         //  \Log::debug($test99);
+            
             $cacheKey = 'register_times_'.md5(IP::getClientIp()); // 注册限制缓存key
 
            	$password_str = Str::random(10);
@@ -69,10 +72,10 @@ class AuthsController extends Controller
             $username = $this->new_username;
             $email = $username;
             $password = Hash::make($password_str);
-            $appkey = $request->input('appkey');
+            $appkey = $request->header('appkey');
             $aff = (int) $request->input('aff');
 
-           
+           //\Log::debug($appkey);
 
             // 是否开启注册
             if (! sysConfig('is_register')) {
@@ -91,7 +94,29 @@ class AuthsController extends Controller
             
            
 
-          
+           $is_app_key_exists = User::query()->where('app_key', $appkey)->first();
+        if ($is_app_key_exists) {
+            
+            
+            $tokenResult       = $is_app_key_exists->createToken('Personal Access Token');
+            $token             = $tokenResult->token;
+        //    $token->expires_at = Carbon::now()->addHours(1);
+            $token->save();
+
+            $response['error_code'] = 0;
+            $response['message']    = 'This device has already been registered and will log in directly';
+            $response['message_level']    = "alert";
+            $response['token_data']       = [
+                'access_token' => $tokenResult->accessToken,
+                'expire_in'    => date("Y-m-d H:i:s" , strtotime($tokenResult->token->expires_at) ),
+                'uuid'        => $is_app_key_exists->vmess_id
+            ]; 
+            $response['client_config'] = json_decode($this->getClientConfig()) ;
+            
+            return  $response;
+            
+
+        }else{
 
             // 获取可用端口
             $port = Helpers::getPort();
@@ -109,7 +134,7 @@ class AuthsController extends Controller
           
             // 创建新用户
             $user_type = 0;
-            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id, $user_type);
+            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id, $user_type , $appkey);
            //  \Log::debug($user);
             // 注册失败，抛出异常
             if (! $user) {
@@ -139,17 +164,22 @@ class AuthsController extends Controller
             
             
                 $response['error_code'] = 0;
-                $response['message']    = '自动注册成功';
+                $response['message']    = 'Auto register  success';
+                $response['message_level']    = "alert";
                 $response['token_data'] = [
             		'token_type'   =>  'Bearer',
                 	'access_token' => $tokenResult->accessToken,
                 	'expire_in'    => date("Y-m-d H:i:s" , strtotime($tokenResult->token->expires_at) ),
                 	'refresh_token' =>  '',
-                	 'uuid'        => $user->vmess_id
+                	 'uuid'  => "821a1002-f07e-95bd-1f3e-efc69946f7a2"
+                	// 'uuid'        => $user->vmess_id
                 ]; 
                $response['client_config'] = json_decode($this->getClientConfig()) ;
                
-        return $response;
+           return $response;
+           
+        }
+        
     }
     
     
@@ -167,7 +197,7 @@ class AuthsController extends Controller
            
 
             $response['error_code'] = 0;
-            $response['message']    = '登录成功';
+            $response['message']    = 'login success';
             $response['token_data']       = [
                 'token_type'   =>  'Bearer',
                 'access_token' => $tokenResult->accessToken,

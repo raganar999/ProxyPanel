@@ -27,12 +27,12 @@ class CheckPostPara
            
             
         ]);
-       
+           //  \Log::debug(Request::header());
          
         if ( $validator->fails() ){
             // return response()->json($validator->messages(), 422);
         	$response['error_code'] =  1003;
-        	$response['message']    = '提交缺失参数或者错误';
+        	$response['message']    = 'missing parameters or errors';
         	// $response['message']    = '';
              $response['data']       = [
                 

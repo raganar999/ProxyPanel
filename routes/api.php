@@ -73,6 +73,7 @@ Route::group(['middleware' => ['auth:api','checkPostPara']], function() {
     Route::post('user/ver1/updateuser','Api\Client\AuthsController@updateUser');
     Route::post('user/ver1/buy','Api\Client\Buycontroller@create');
     Route::get('user/ver1/serverlist','Api\Client\UsersController@nodeList');
+    Route::get('user/ver1/allowlist','Api\Client\UsersController@allowApps');
     Route::get('user/ver1/nodelist','Api\Client\UsersController@nodeList');
     Route::get('user/ver1/term','Api\Client\UsersController@term');
     Route::get('user/ver1/userstatus','Api\Client\UsersController@userStatus');
@@ -90,6 +91,9 @@ Route::group(['middleware' => ['auth:api','checkPostPara']], function() {
 
 });
 
+
+
+
 Route::group(['middleware' => ['api','checkPostPara']], function() {
 
     Route::post('user/ver1/vregister','Api\Client\AuthsController@autoRegister');
@@ -97,3 +101,7 @@ Route::group(['middleware' => ['api','checkPostPara']], function() {
     Route::post('user/ver1/get_edpawdcode','Api\Client\AuthsController@sendCode');
     Route::post('user/ver1/updatepassword','Api\Client\AuthsController@updatePasswordWithCode');
   });
+
+
+
+

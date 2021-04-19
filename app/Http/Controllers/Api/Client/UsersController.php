@@ -26,6 +26,7 @@ use App\Models\Label;
 use App\Models\ReferralLog;
 use App\Models\ApiDomain;
 use App\Models\SsGroup;
+use App\Models\Allowapps;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
@@ -59,6 +60,22 @@ class UsersController extends Controller
         return Auth::id();
 	}
 	
+	public function allowApps(){
+	    
+	    $allowlist = AllowApps::query()->pluck('app_domain');
+	    
+	    
+	    
+	    	$response['error_code'] = 1;
+        	$response['message']    = 'Get allowlist successfully';
+        	$response['allow_list'] =   $allowlist;
+               
+                 
+		   return response()->json($response);
+	    
+	    
+	}
+	
 	public function term(){
 		
 	
@@ -73,9 +90,9 @@ class UsersController extends Controller
                    'term' =>  $term->content,
                 
             ]; 
-		    return response()->json([
-		    	'success' => $response
-		    ]);
+            
+		   return response()->json($response);
+	    
         }else{
 
         	$response['error_code'] = null;
@@ -275,9 +292,11 @@ class UsersController extends Controller
 		//	$row["user_type"]          = $user->user_type;
 		
 
-			$row["vipTraffic"]         = flowAutoShow($user->transfer_enable);
-			$row["vipUsedTraffic"]     = flowAutoShow($user->u + $user->d);
-			$row["expireTime"]         = $user->expired_at;
+			$row["vip_traffic"]         =$user->transfer_enable;
+			$row["vip_usedTraffic"]     = $user->u + $user->d;
+			$row["expire_ime"]          = $user->expired_at;
+			$row["user_status"]         = $user->status;
+			$row["user_email"]         = $user->email;
 		//	$row["allow_devices_num"]  = $user->usage;
 		//	$row["vmess_id"]           = $user->vmess_id;
 		//	$row["resetday"]           = $user->traffic_reset_day;
@@ -309,16 +328,18 @@ class UsersController extends Controller
 			$row                       = [];
 			$row["user_enable"]        = $user->enable;
 		//	$row["user_type"]          = $user->user_type;
-		
+		    $row["high_speed_traffic"] = "unlimited";
 
 			$row["vipTraffic"]         = flowAutoShow($user->transfer_enable);
 			$row["vipUsedTraffic"]     = flowAutoShow($user->u + $user->d);
-			$row["expireDate"]         = $user->expire_time;
-		//	$row["allow_devices_num"]  = $user->usage;
+			$row["expireDate"]         = $user->expired_at;
+			$row["allow_devices_num"]  = $user->usage;
 		//	$row["vmess_id"]           = $user->vmess_id;
-		//	$row["resetday"]           = $user->traffic_reset_day;
-		//    $row["speed_level"] = flowAutoShow($user->speed_limit_per_con);
-		   
+			$row["reset_day"]           = $user->reset_day;
+			$row["balance"]             = $user->credit;
+			$row["email"]               = $user->email;
+		    $row["speed_level"]         = "high";
+		    $row["user_type"]           = $user->type;
 		
 		}
 
@@ -329,6 +350,7 @@ class UsersController extends Controller
 		if ($user) {
         	$response['error_code'] = 0;
         	$response['message']    = 'Get user status successfully ';
+        	$response['level']    = "alert";
         	$response['data']       = $row ;
         	
 		    return response()->json($response);
