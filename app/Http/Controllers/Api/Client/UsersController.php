@@ -330,8 +330,8 @@ class UsersController extends Controller
 		//	$row["user_type"]          = $user->user_type;
 		    $row["high_speed_traffic"] = "unlimited";
 
-			$row["vipTraffic"]         = flowAutoShow($user->transfer_enable);
-			$row["vipUsedTraffic"]     = flowAutoShow($user->u + $user->d);
+			$row["vipTraffic"]         = $user->transfer_enable;
+			$row["vipUsedTraffic"]     = $user->u + $user->d;
 			$row["expireDate"]         = $user->expired_at;
 			$row["allow_devices_num"]  = $user->usage;
 		//	$row["vmess_id"]           = $user->vmess_id;

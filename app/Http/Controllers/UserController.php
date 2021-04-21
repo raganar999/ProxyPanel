@@ -115,6 +115,8 @@ class UserController extends Controller
 
         // 获取当前用户可用节点
         $nodeList = $user->nodes()->with(['labels', 'level_table'])->get();
+        
+         \Log::debug($nodeList);
         $onlineNode = NodeHeartbeat::recently()->distinct()->pluck('node_id')->toArray();
         foreach ($nodeList as $node) {
             // 节点在线状态

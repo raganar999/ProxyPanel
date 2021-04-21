@@ -73,8 +73,13 @@ class AuthsController extends Controller
             $email = $username;
             $password = Hash::make($password_str);
             $appkey = $request->header('appkey');
+            $device = $request->header('device');
             $aff = (int) $request->input('aff');
-
+           
+            $device_model = $request->device_model;
+            $device_brand = $request->device_brand;
+            $system_language = $request->system_language;
+            $system_version =  $request->system_version;
            //\Log::debug($appkey);
 
             // 是否开启注册
@@ -97,11 +102,14 @@ class AuthsController extends Controller
            $is_app_key_exists = User::query()->where('app_key', $appkey)->first();
         if ($is_app_key_exists) {
             
-            
+            $is_register = 0;
             $tokenResult       = $is_app_key_exists->createToken('Personal Access Token');
             $token             = $tokenResult->token;
         //    $token->expires_at = Carbon::now()->addHours(1);
             $token->save();
+            
+            $this->addUserLoginLog($is_app_key_exists->id, IP::getClientIp(), $is_register, $appkey , $device, $device_brand, $device_model, $system_language , $system_version );
+            
 
             $response['error_code'] = 0;
             $response['message']    = 'This device has already been registered and will log in directly';
@@ -156,6 +164,8 @@ class AuthsController extends Controller
                 Invite::find($affArr['code_id'])->update(['invitee_id' => $uid, 'status' => 1]);
             }
             
+              $is_register = 1;
+             $this->addUserLoginLog($user->id, IP::getClientIp(), $is_register, $appkey , $device, $device_brand, $device_model, $system_language , $system_version );
            // $user= User::find($uid);
            // \Log::debug($user);
             $tokenResult = $user->createToken('Personal Access Token');
@@ -187,13 +197,22 @@ class AuthsController extends Controller
   	
       if(Auth::attempt(['email' => $request->email, 'password' =>$request->password])){ 
            
+            $appkey = $request->header('appkey');
+            $device = $request->header('device');
+            $device_model = $request->device_model;
+            $device_brand = $request->device_brand;
+            $system_language = $request->system_language;
+            $system_version =  $request->system_version;
+            $is_register = 0;
+            
             $user = Auth::user(); 
             $tokenResult       = $user->createToken('Personal Access Token');
             $token             = $tokenResult->token;
          //  $token->expires_at = Carbon::now()->addHours(1);
             $token->save();
+            
            
-            $this->addUserLoginLog($user->id, IP::getClientIp());
+            $this->addUserLoginLog($user->id, IP::getClientIp(), $is_register, $device, $device_brand, $device_model, $system_language , $system_version );
            
 
             $response['error_code'] = 0;
@@ -467,7 +486,7 @@ class AuthsController extends Controller
      * @param  int  $userId  用户ID
      * @param  string  $ip  IP地址
      */
-    private function addUserLoginLog(int $userId, string $ip): void
+    private function addUserLoginLog(int $userId, string $ip,  int $is_register , string $appkey = null ,string $device = null, string $device_model = null,  string $system_language = null , string $system_version = null ): void
     {
         $ipLocation = IP::getIPInfo($ip);
 
@@ -476,7 +495,14 @@ class AuthsController extends Controller
         }
 
         $log = new UserLoginLog();
+        
         $log->user_id = $userId;
+        $log->is_register = $is_register;
+        $log->app_key = $appkey;
+        $log->device = $device;
+        $log->device_model = $device_model;
+        $log->system_language = $system_language;
+        $log->system_version = $system_version;
         $log->ip = $ip;
         $log->country = $ipLocation['country'] ?? '';
         $log->province = $ipLocation['province'] ?? '';

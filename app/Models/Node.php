@@ -112,6 +112,13 @@ class Node extends Model
 
     public function config(User $user)
     {
+        $lable_list = [];
+            $lables = $this->labels()->get();
+            foreach ($lables as $lable) {
+                $lable_list[] = sysConfig('website_url').'/assets/images/lable/'.($lable->name).'.png';
+                
+            };
+            
         $config = [
             'id'    => $this->id,
             'name'  => $this->name,
@@ -123,9 +130,15 @@ class Node extends Model
             'recommend' => $this->recommend,
             'tag'   => $this->tag ,
             'Weights' =>  $this-> Weights,
-            'country_code' => $this->country_code,
+            //'country_code' => $this->country_code,
+            'country_url' =>sysConfig('website_url').'/assets/images/country/'.($this->country_code).'.png',
+            //'lable_list'     => $this->labels()->pluck('name'),
+            'lable_list'     => $lable_list,
             
         ];
+           
+        
+        
         switch ($this->type) {
             case 2:
                 $config = array_merge($config, [
