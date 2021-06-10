@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Log;
 
 class AccountExpire extends Notification implements ShouldQueue
 {
@@ -20,7 +21,9 @@ class AccountExpire extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return sysConfig('account_expire_notification');
+         \Log::debug(sysConfig('account_expire_notification'));
+      return ['mail', 'database'];
+     //   return sysConfig('account_expire_notification');
     }
 
     public function toMail($notifiable)
@@ -33,8 +36,16 @@ class AccountExpire extends Notification implements ShouldQueue
 
     public function toDataBase($notifiable)
     {
+       
+      //  \Log::debug(sysConfig('account_expire_notification'));
+        
         return [
-            'days' => $this->days,
+            
+            'title' => "Account warning",
+            'content' => "Your account will expire in three days, please renew in time",
+            'type'   => "notification",
+            'days'  => $this->days,
+            
         ];
     }
 

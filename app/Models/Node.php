@@ -129,7 +129,7 @@ class Node extends Model
             'group_name' => NodeGroup::whereGroupId($this->group_id)->value('group_name'),
             'recommend' => $this->recommend,
             'tag'   => $this->tag ,
-            'Weights' =>  $this-> Weights,
+            'Weights' =>  $this-> weights,
             //'country_code' => $this->country_code,
             'country_url' =>sysConfig('website_url').'/assets/images/country/'.($this->country_code).'.png',
             //'lable_list'     => $this->labels()->pluck('name'),

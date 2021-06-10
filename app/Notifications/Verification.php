@@ -19,7 +19,7 @@ class Verification extends Notification
 
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['mail','database'];
     }
 
     public function toMail($notifiable)
@@ -29,6 +29,13 @@ class Verification extends Notification
             ->line(trans('notification.verification'))
             ->line($this->code)
             ->line(trans('notification.verification_limit', ['minutes' => config('tasks.close.verify')]));
+    }
+
+    public function toDataBase($notifiable)
+    {
+        return [
+            'code' => $this->code,
+        ];
     }
 
     public function toArray($notifiable)

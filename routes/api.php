@@ -67,7 +67,7 @@ Route::group(['namespace' => 'Api\Client', 'middleware' => 'api', 'prefix' => 'c
 
 
 Route::group(['middleware' => ['auth:api','checkPostPara']], function() {
-    Route::get('test','Api\Client\UsersController@test');
+    Route::get('user/ver1/test','Api\Client\UsersController@test');
     Route::post('user/ver1/logupload','Api\Client\UsersController@logUpload');
     Route::get('user/ver1/refreshstatus','Api\Client\UsersController@refreshStatus');
     Route::post('user/ver1/updateuser','Api\Client\AuthsController@updateUser');

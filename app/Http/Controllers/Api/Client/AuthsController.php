@@ -45,7 +45,7 @@ class AuthsController extends Controller
    
     function __construct()
     {
-        self::$systemConfig = Helpers::systemConfig();
+        //self::$systemConfig = Helpers::systemConfig();
     }
    
     // 自动注册
@@ -81,7 +81,7 @@ class AuthsController extends Controller
             $system_language = $request->system_language;
             $system_version =  $request->system_version;
            //\Log::debug($appkey);
-
+           //  \Log::debug($request);
             // 是否开启注册
             if (! sysConfig('is_register')) {
                 Session::flash('errorRegMsg', '系统维护，暂停注册');
@@ -117,7 +117,8 @@ class AuthsController extends Controller
             $response['token_data']       = [
                 'access_token' => $tokenResult->accessToken,
                 'expire_in'    => date("Y-m-d H:i:s" , strtotime($tokenResult->token->expires_at) ),
-                'uuid'        => $is_app_key_exists->vmess_id
+                //'uuid'        => $is_app_key_exists->vmess_id
+                'uuid'        => '821a1002-f07e-95bd-1f3e-efc69946f7a2'
             ]; 
             $response['client_config'] = json_decode($this->getClientConfig()) ;
             
@@ -204,6 +205,7 @@ class AuthsController extends Controller
             $system_language = $request->system_language;
             $system_version =  $request->system_version;
             $is_register = 0;
+           // \Log::debug($request);
             
             $user = Auth::user(); 
             $tokenResult       = $user->createToken('Personal Access Token');
@@ -222,7 +224,8 @@ class AuthsController extends Controller
                 'access_token' => $tokenResult->accessToken,
                 'expire_in'    => $tokenResult->token->expires_at,
                 'refresh_token' =>  '',
-                'uuid'        => $user->vmess_id
+               // 'uuid'        => $user->vmess_id
+               'uuid'        => '821a1002-f07e-95bd-1f3e-efc69946f7a2'
             ]; 
             
             
@@ -486,7 +489,7 @@ class AuthsController extends Controller
      * @param  int  $userId  用户ID
      * @param  string  $ip  IP地址
      */
-    private function addUserLoginLog(int $userId, string $ip,  int $is_register , string $appkey = null ,string $device = null, string $device_model = null,  string $system_language = null , string $system_version = null ): void
+    private function addUserLoginLog(int $userId, string $ip,  int $is_register , string $appkey = null ,string $device = null, string $device_brand = null , string $device_model = null,  string $system_language = null , string $system_version = null ): void
     {
         $ipLocation = IP::getIPInfo($ip);
 
@@ -500,6 +503,7 @@ class AuthsController extends Controller
         $log->is_register = $is_register;
         $log->app_key = $appkey;
         $log->device = $device;
+        $log->device_brand = $device_brand;
         $log->device_model = $device_model;
         $log->system_language = $system_language;
         $log->system_version = $system_version;
@@ -666,12 +670,29 @@ class AuthsController extends Controller
   ],
   "routing": {
       "domainStrategy": "IPIfNonMatch",
-      "rules": []
+      "rules": [],
+       "balancers": [
+       {
+       "tag": "balancer",
+        "selector": [],
+        "strategy": "optimal",
+        "optimalSettings": {
+          "timeout": 8000,
+          "interval": 300000,
+          "url": "https://about.google",
+          "count": 1,
+          "weights": []
+         
+        }
+      }
+      ]
+    
   },
   "dns": {
       "hosts": {},
       "servers": []
   }
+  
 }';
 
         return $client_config;

@@ -41,6 +41,7 @@ use Log;
 use Hash;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\AccountExpire;
 
 class UsersController extends Controller
 {
@@ -50,14 +51,22 @@ class UsersController extends Controller
 
     function __construct()
     {
-        self::$systemConfig = Helpers::systemConfig();
+        //self::$systemConfig = Helpers::cacheSystemConfig();
     }
 
 
 
 	public function test(Request $request){
+	    
+	    $user = auth()->user();
+	    $user->notify(new AccountExpire($user->expired_at));
+	    
+	     \Log::debug($user);
 	    // return '111';
         return Auth::id();
+        
+         
+        
 	}
 	
 	public function allowApps(){
@@ -79,7 +88,7 @@ class UsersController extends Controller
 	public function term(){
 		
 	
-			$term = Article::orderBy('sort', 'desc')->first();
+			$term = Article::whereType(3)->orderBy('sort', 'desc')->first();
 	
         if ($term) {
 
@@ -270,6 +279,9 @@ class UsersController extends Controller
 	
 	 public function nodeList(int $id = null)
     {
+       
+       
+       
         $user = auth()->user();
         $nodes = $user->nodes()->get();
         if (isset($id)) {
@@ -285,8 +297,19 @@ class UsersController extends Controller
         foreach ($nodes as $node) {
             $servers[] = $node->config($user);
         }
-
-
+        
+            
+          //  $notice = [];
+            //$notice["title"]  = Article::whereType(2)->pluck('title');
+           // $notice["content"] =  Article::whereType(2)->pluck('content');
+           
+            $notice = [];
+            $notice["title"]    ="AccountExpire";
+            $notice["content"]    ="Your account will expire soon, please renew in time";
+            $notice["type"]    = "Notification";  //分为三个等级，小铃铛+通知栏， 小铃铛+dialog
+            $notice["time"]    = date('Y-m-d H:i:s');
+            
+            
 	        $row  = [];
 			$row["user_enable"]        = $user->enable;
 		//	$row["user_type"]          = $user->user_type;
@@ -297,6 +320,10 @@ class UsersController extends Controller
 			$row["expire_ime"]          = $user->expired_at;
 			$row["user_status"]         = $user->status;
 			$row["user_email"]         = $user->email;
+			$row["latest_api_domain"]  = "https://zaozao.ml:7777";
+		//	$row["latest_buy_domain"]  = "zaozao2.ml";
+			$row["latest_ver"]         = "1.0.0";
+	        $row["notice"]             = [$notice];
 		//	$row["allow_devices_num"]  = $user->usage;
 		//	$row["vmess_id"]           = $user->vmess_id;
 		//	$row["resetday"]           = $user->traffic_reset_day;
@@ -319,6 +346,41 @@ class UsersController extends Controller
     }
 
 
+
+	public function refreshStatus(){
+
+		$user = auth()->user();
+	
+			
+			$balancer =  $user->nodes()->whereRecommend(1)->select(['tag','weights'])->get();
+			
+			//select('tag','weights' );
+		
+		    $row  = [];
+			$row["user_enable"]        = $user->enable;
+		//	$row["user_type"]          = $user->user_type;
+			$row["vip_traffic"]         =$user->transfer_enable;
+			$row["vip_used_traffic"]     = $user->u + $user->d;
+			$row["expire_time"]          = $user->expired_at;
+			$row["user_status"]        = $user->status;
+			$row["user_email"]         = $user->email;
+			$row["latest_api_domain"]  = "zaozao.ml";
+			$row["latest_buy_domain"]  = "zaozao2.ml";
+			$row["latest_ver"]         = "1.0.0";
+			$row["notice"]             = "";
+		
+        	$response['error_code'] = 0;
+        	$response['message']    = 'Get user status successfully ';
+        	$response['level']    = "alert";
+        	$response['data']       = $row ;
+        	$response['balancer ']  = $balancer;
+        	
+        	
+        	return response()->json($response);
+      
+	}
+
+
 	public function userStatus(){
 
 		$user = auth()->user();
@@ -338,6 +400,7 @@ class UsersController extends Controller
 			$row["reset_day"]           = $user->reset_day;
 			$row["balance"]             = $user->credit;
 			$row["email"]               = $user->email;
+			$row["email"]               = $user->id;
 		    $row["speed_level"]         = "high";
 		    $row["user_type"]           = $user->type;
 		

@@ -2,15 +2,15 @@
 
 namespace App\Components;
 
+use App\Models\Config;
 use App\Models\CouponLog;
-use App\Models\Marketing;
 use App\Models\NotificationLog;
 use App\Models\SsConfig;
-use App\Models\Config;
 use App\Models\User;
 use App\Models\UserCreditLog;
 use App\Models\UserDataModifyLog;
 use App\Models\UserSubscribe;
+use Cache;
 use DateTime;
 use Str;
 
@@ -49,50 +49,41 @@ class Helpers
 
         return $code;
     }
-    
-        // 获取系统配置
-    public static function systemConfig()
-    {
-        $config = Config::query()->get();
-        $data = [];
-        foreach ($config as $vo) {
-            $data[$vo->name] = $vo->value;
-        }
-
-        return $data;
-    }
 
     /**
      * 添加用户.
      *
      * @param  string  $email  用户邮箱
      * @param  string  $password  用户密码
-     * @param  int  $transfer_enable  可用流量
-     * @param  int|null  $date  可使用天数
+     * @param  string  $transfer_enable  可用流量
+     * @param  int  $data  可使用天数
      * @param  int|null  $inviter_id  邀请人
-     * @param  string|null  $username  昵称
-     * @return User
+     *
+     * @return int
      */
-    public static function addUser(string $email, string $password, int $transfer_enable, int $date = null, int $inviter_id = null,  int $user_type = 1, string $appkey = null, string $username = null ): User
+    public static function addUser(string $email, string $password, string $transfer_enable, int $data, $inviter_id = null): int
     {
-        return User::create([
-            'username'        => $username ?? $email,
-            'email'           => $email,
-            'password'        => $password,
-            'port'            => self::getPort(), // 生成一个可用端口
-            'passwd'          => Str::random(),
-            'vmess_id'        => Str::uuid(),
-            'method'          => self::getDefaultMethod(),
-            'protocol'        => self::getDefaultProtocol(),
-            'obfs'            => self::getDefaultObfs(),
-            'transfer_enable' => $transfer_enable,
-            'expired_at'      => date('Y-m-d', strtotime($date.' days')),
-            'user_group_id'   => null,
-            'reg_ip'          => IP::getClientIp(),
-            'inviter_id'      => $inviter_id,
-            'type'            => $user_type,
-            'app_key'         => $appkey,
-        ]);
+        $user = new User();
+        $user->username = $email;
+        $user->email = $email;
+        $user->password = $password;
+        // 生成一个可用端口
+        $user->port = self::getPort();
+        $user->passwd = Str::random();
+        $user->vmess_id = Str::uuid();
+        $user->enable = 1;
+        $user->method = self::getDefaultMethod();
+        $user->protocol = self::getDefaultProtocol();
+        $user->obfs = self::getDefaultObfs();
+        $user->transfer_enable = $transfer_enable;
+        $user->expired_at = date('Y-m-d', strtotime('+'.$data.' days'));
+        $user->reg_ip = IP::getClientIp();
+        $user->inviter_id = $inviter_id;
+        $user->reset_time = null;
+        $user->status = 0;
+        $user->save();
+
+        return $user->id;
     }
 
     // 获取一个有效端口
@@ -152,6 +143,20 @@ class Helpers
         return $config->name ?? 'plain';
     }
 
+    // 获取系统配置
+    public static function cacheSysConfig($name)
+    {
+        if ($name === 'is_onlinePay') {
+            $value = sysConfig('is_AliPay') || sysConfig('is_QQPay') || sysConfig('is_WeChatPay') || sysConfig('is_otherPay');
+            Cache::tags('sysConfig')->put('is_onlinePay', $value);
+        } else {
+            $value = Config::find($name)->value;
+            Cache::tags('sysConfig')->put($name, $value ?? false);
+        }
+
+        return $value;
+    }
+
     public static function daysToNow($date): int
     {
         return (new DateTime())->diff(new DateTime($date))->days;
@@ -188,12 +193,12 @@ class Helpers
      *
      * @param  string  $description  备注
      * @param  int  $couponId  优惠券ID
-     * @param  int|null  $goodsId  商品ID
-     * @param  int|null  $orderId  订单ID
+     * @param  int  $goodsId  商品ID
+     * @param  int  $orderId  订单ID
      *
      * @return bool
      */
-    public static function addCouponLog($description, $couponId, $goodsId = null, $orderId = null): bool
+    public static function addCouponLog(string $description, int $couponId, $goodsId = 0, $orderId = 0): bool
     {
         $log = new CouponLog();
         $log->coupon_id = $couponId;
@@ -208,7 +213,7 @@ class Helpers
      * 记录余额操作日志.
      *
      * @param  int  $userId  用户ID
-     * @param  int|null  $orderId  订单ID
+     * @param  int  $orderId  订单ID
      * @param  int  $before  记录前余额
      * @param  int  $after  记录后余额
      * @param  int  $amount  发生金额
@@ -216,7 +221,7 @@ class Helpers
      *
      * @return bool
      */
-    public static function addUserCreditLog($userId, $orderId, $before, $after, $amount, $description = ''): bool
+    public static function addUserCreditLog(int $userId, int $orderId, int $before, int $after, int $amount, $description = ''): bool
     {
         $log = new UserCreditLog();
         $log->user_id = $userId;
@@ -234,14 +239,14 @@ class Helpers
      * 记录流量变动日志.
      *
      * @param  int  $userId  用户ID
-     * @param  int|null  $orderId  订单ID
+     * @param  int  $orderId  订单ID
      * @param  int  $before  记录前的值
      * @param  int  $after  记录后的值
      * @param  string  $description  描述
      *
      * @return bool
      */
-    public static function addUserTrafficModifyLog($userId, $orderId, $before, $after, $description = ''): bool
+    public static function addUserTrafficModifyLog(int $userId, int $orderId, int $before, int $after, $description = ''): bool
     {
         $log = new UserDataModifyLog();
         $log->user_id = $userId;
@@ -253,27 +258,19 @@ class Helpers
         return $log->save();
     }
 
-    /**
-     * 推销信息推送
-     *
-     * @param  int  $type  渠道类型
-     * @param  string  $title  标题
-     * @param  string  $content  内容
-     * @param  int  $status  状态
-     * @param  string  $error  报错
-     * @param  string  $receiver  收件人
-     * @return int
-     */
-    public static function addMarketing(int $type, string $title, string $content, int $status = 1, string $error = '', string $receiver = ''): int
+    public static function abortIfNotModified($data): string
     {
-        $marketing = new Marketing();
-        $marketing->type = $type;
-        $marketing->receiver = $receiver;
-        $marketing->title = $title;
-        $marketing->content = $content;
-        $marketing->error = $error;
-        $marketing->status = $status;
+        $req = request();
+        // Only for "GET" method
+        if (! $req->isMethod('GET')) {
+            return '';
+        }
 
-        return $marketing->save();
+        $etag = sha1(json_encode($data));
+        if ($etag == $req->header('IF-NONE-MATCH')) {
+            abort(304);
+        }
+
+        return $etag;
     }
 }
