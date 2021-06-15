@@ -20,7 +20,7 @@ class DataExhaust extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return sysConfig('data_exhaust_notification');
+        return json_decode(sysConfig('data_exhaust_notification'));
     }
 
     public function toMail($notifiable)
@@ -35,6 +35,9 @@ class DataExhaust extends Notification implements ShouldQueue
     public function toDataBase($notifiable)
     {
         return [
+            'title' => "Data Exhaust",
+            'content' => "Your VIP traffic is about to be consumed, please continue to use it after purchase",
+            'type'   => "dialog",
             'percent' => $this->percent,
         ];
     }

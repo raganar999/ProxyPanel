@@ -19,7 +19,7 @@ class PasswordReset extends Notification
 
     public function via($notifiable)
     {
-        return sysConfig('password_reset_notification');
+        return json_decode(sysConfig('password_reset_notification'));
     }
 
     public function toMail($notifiable)

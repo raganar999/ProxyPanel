@@ -20,7 +20,7 @@ class NodeDailyReport extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return sysConfig('node_daily_notification');
+        return json_decode(sysConfig('node_daily_notification'));
     }
 
     public function toMail($notifiable)

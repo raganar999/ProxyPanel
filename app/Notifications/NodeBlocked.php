@@ -21,7 +21,7 @@ class NodeBlocked extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return sysConfig('node_blocked_notification');
+        return json_decode(sysConfigsysConfig('node_blocked_notification'));
     }
 
     public function toMail($notifiable)

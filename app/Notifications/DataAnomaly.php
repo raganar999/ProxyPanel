@@ -25,7 +25,7 @@ class DataAnomaly extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return sysConfig('data_anomaly_notification');
+        return json_decode(sysConfig('data_anomaly_notification'));
     }
 
     public function toMail($notifiable)

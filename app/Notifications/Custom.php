@@ -23,7 +23,7 @@ class Custom extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return $notifiable ?? ['mail', BarkChannel::class];
+        return json_decode($notifiable ?? ['mail', BarkChannel::class]);
     }
 
     public function toMail($notifiable)

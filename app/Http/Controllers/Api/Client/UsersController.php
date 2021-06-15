@@ -39,9 +39,12 @@ use Cache;
 use Session;
 use Log;
 use Hash;
+use Storage;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
+//use Illuminate\Support\Facades\Storage;
 use App\Notifications\AccountExpire;
+use App\Notifications\DataExhaust;
+
 
 class UsersController extends Controller
 {
@@ -60,12 +63,46 @@ class UsersController extends Controller
 	    
 	    $user = auth()->user();
 	    $user->notify(new AccountExpire($user->expired_at));
-	    
-	     \Log::debug($user);
+	    $user->notify(new DataExhaust(60));
+	      
+	  // $data =  $user->unreadNotifications ;
+	 //   foreach ($user->unreadNotifications as $notification) {
+	 //      $data = $notification->data;
+	 //      \Log::debug($data);
+    //      $notification->markAsRead();
+      //  };
+    //  return $data;
+	    /*
+	    // \Log::debug($user);
 	    // return '111';
-        return Auth::id();
+	  
+	    $data = [
+          'message' => trans('message.greeting')
+       ];
+    
+        return response()->json($data, 200);
+       
+        */
+          return Auth::id();
         
-         
+	}
+	
+
+    public function notification(Request $request){
+	    
+	    $user = auth()->user();
+	    $user->notify(new AccountExpire($user->expired_at));
+          return Auth::id();
+        
+	}
+	
+	
+	public function dialog(Request $request){
+	    
+	    $user = auth()->user();
+	    
+	    $user->notify(new DataExhaust(60));
+          return Auth::id();
         
 	}
 	
@@ -92,7 +129,7 @@ class UsersController extends Controller
 	
         if ($term) {
 
-        	$response['error_code'] = 1;
+        	$response['error_code'] = 0;
         	$response['message']    = 'Get term successfully';
         	$response['data']        =   [
                
@@ -120,9 +157,9 @@ class UsersController extends Controller
 	public function logUpload(Request $request){
 	   
 	  if ($request->isMethod('post')) {
-
+       //  \Log::debug($request);
             $file = $request->file('log');
-
+         \Log::debug($file);
             // 文件是否上传成功
             if ($file->isValid()) {
 
@@ -136,13 +173,13 @@ class UsersController extends Controller
                 $filename = date('Y-m-d-H-i-s') . '-' . uniqid() . '.' . $ext;
                 // 使用我们新建的uploads本地存储空间（目录）
                 //这里的uploads是配置文件的名称
-                $bool = Storage::disk('uploads')->put($filename, file_get_contents($realPath));
+                $bool = Storage::disk('public')->put($filename, file_get_contents($realPath));
                 var_dump($bool);
 
             }
             
          	$response['error_code'] = 0;
-        	$response['message']    = '上传日志文件成功';
+        	$response['message']    = 'Upload log file successfully';
 
         	
 		    return response()->json($response);
@@ -304,11 +341,23 @@ class UsersController extends Controller
            // $notice["content"] =  Article::whereType(2)->pluck('content');
            
             $notice = [];
-            $notice["title"]    ="AccountExpire";
-            $notice["content"]    ="Your account will expire soon, please renew in time";
-            $notice["type"]    = "Notification";  //分为三个等级，小铃铛+通知栏， 小铃铛+dialog
-            $notice["time"]    = date('Y-m-d H:i:s');
             
+           foreach ($user->unreadNotifications as $notification) {
+             $data =  $notification->data;
+              \Log::debug($data);
+              $row1                    = [];
+              $row1['id']          = $notification->id;
+              $row1['type']        = $data['type'];
+              $row1['title']       = $data['title'];
+              $row1['content']     = $data['content'];
+              $row1['time']        =  $notification->created_at->format('Y-m-d-H:i:s');
+              array_push($notice, $row1);
+              $notification->markAsRead();
+             
+           };
+            
+           // $notice["title"]    = $data;
+         
             
 	        $row  = [];
 			$row["user_enable"]        = $user->enable;
@@ -323,7 +372,7 @@ class UsersController extends Controller
 			$row["latest_api_domain"]  = "https://zaozao.ml:7777";
 		//	$row["latest_buy_domain"]  = "zaozao2.ml";
 			$row["latest_ver"]         = "1.0.0";
-	        $row["notice"]             = [$notice];
+	        $row["notice"]             = $notice;
 		//	$row["allow_devices_num"]  = $user->usage;
 		//	$row["vmess_id"]           = $user->vmess_id;
 		//	$row["resetday"]           = $user->traffic_reset_day;

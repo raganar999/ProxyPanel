@@ -22,7 +22,7 @@ class PaymentReceived extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return sysConfig('payment_received_notification');
+        return (sysConfig('payment_received_notification'));
     }
 
     public function toMail($notifiable)

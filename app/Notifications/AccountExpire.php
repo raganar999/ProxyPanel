@@ -21,9 +21,12 @@ class AccountExpire extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-         \Log::debug(sysConfig('account_expire_notification'));
-      return ['mail', 'database'];
-     //   return sysConfig('account_expire_notification');
+        // \Log::debug(sysConfig('account_expire_notification'));
+     // return ['mail', 'database'];
+     
+     //$setting =json_decode(sysConfig('account_expire_notification'));
+    // \Log::debug($setting);
+       return json_decode(sysConfig('account_expire_notification'));
     }
 
     public function toMail($notifiable)
