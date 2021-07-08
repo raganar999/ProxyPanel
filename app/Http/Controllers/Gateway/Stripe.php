@@ -23,7 +23,9 @@ class Stripe extends AbstractPayment
 
     public function purchase($request): JsonResponse
     {
-        $payment = $this->creatNewPayment(Auth::id(), $request->input('id'), $request->input('amount'));
+        $amount = $request->input('amount') * 0.72;  //换算成英镑
+        
+        $payment = $this->creatNewPayment(Auth::id(), $request->input('id'), $amount, 'gbp', 0.72);
         
         $pay_mode= $request->input('mode');
         
@@ -47,7 +49,7 @@ class Stripe extends AbstractPayment
         }
      }else{
          
-         $data = $this->getCheckoutIntentData( $request->type, $payment->trade_no, $payment->amount);
+         $data = $this->getCheckoutIntentData( $request->type, $payment->trade_no, $payment->amount, $payment->currency);
 
         try {
             $payment_intent = \Stripe\PaymentIntent::create($data);
@@ -75,7 +77,7 @@ class Stripe extends AbstractPayment
 
     protected function getCheckoutSessionData(string $pay_type,string $tradeNo, int $amount): array
     {
-        $unitAmount = $amount * 100;
+        $unitAmount = $amount ;
         $successURL = route('payment-success');
         $cancelURL = route('payment-failed');
 
@@ -85,7 +87,7 @@ class Stripe extends AbstractPayment
                 'price_data' => [
                     'currency' => 'gbp',
                     'product_data' => [
-                        'name' => '77vpn',
+                        'name' => '77cloud',
                     ],
                     'unit_amount' => $unitAmount,
                 ],
@@ -99,9 +101,9 @@ class Stripe extends AbstractPayment
         ];
     }
     
-     protected function getCheckoutIntentData(string $pay_type, string $tradeNo, int $amount): array
+     protected function getCheckoutIntentData(string $pay_type, string $tradeNo, int $amount, string $currency): array
     {
-        $unitAmount = $amount * 100;
+        $unitAmount = $amount ;
        
         
         //  \Log::debug($pay_type);
@@ -109,7 +111,7 @@ class Stripe extends AbstractPayment
             
             'payment_method_types' => [$pay_type],
             'amount' => $unitAmount,
-            'currency' => 'gbp',
+            'currency' => $currency,
         
         ];
     }

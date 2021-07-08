@@ -34,9 +34,7 @@ class CheckPostPara
         	$response['error_code'] =  1003;
         	$response['message']    = 'missing parameters or errors';
         	// $response['message']    = '';
-             $response['data']       = [
-                
-            ]; 
+            $response['message_level']    = "toast";
 		    return response()->json(['error' => $response]);
 
         }else{

@@ -23,7 +23,7 @@ class DataExhaust extends Notification implements ShouldQueue
         return json_decode(sysConfig('data_exhaust_notification'));
     }
 
-    public function toMail($notifiable)
+   public function toMail($notifiable)
     {
         return (new MailMessage)
             ->subject(trans('notification.traffic_warning'))
@@ -31,12 +31,13 @@ class DataExhaust extends Notification implements ShouldQueue
             ->line(trans('notification.traffic_tips'))
             ->action(trans('notification.view_web'), url('/'));
     }
+ 
 
     public function toDataBase($notifiable)
     {
         return [
-            'title' => "Data Exhaust",
-            'content' => "Your VIP traffic is about to be consumed, please continue to use it after purchase",
+            'title' => "message.dataexhaust.title",
+            'content' => "message.dataexhaust.content",
             'type'   => "dialog",
             'percent' => $this->percent,
         ];

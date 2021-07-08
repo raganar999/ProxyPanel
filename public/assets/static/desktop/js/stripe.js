@@ -50,12 +50,13 @@ $(function () {
                     "X-CSRF-Token": token
                 },
                 body: JSON.stringify({
-                    amount: totalPrice,
+                   // amount: totalPrice,
                     goods_id: packageSku,
                     method: 'stripe',
                     
                     pay_type: 'alipay',
-                    pay_mode:'intent'
+                    pay_mode:'intent',
+                    client: 'web'
                 })
             }
         ).then(function (response) {

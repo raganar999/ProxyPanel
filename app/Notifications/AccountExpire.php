@@ -17,6 +17,7 @@ class AccountExpire extends Notification implements ShouldQueue
     public function __construct($expired_at)
     {
         $this->days = now()->diffInDays($expired_at);
+        $this->expired_day =  $expired_at; // ->format('Y-m-d');
     }
 
     public function via($notifiable)
@@ -44,8 +45,8 @@ class AccountExpire extends Notification implements ShouldQueue
         
         return [
             
-            'title' => "Account warning",
-            'content' => "Your account will expire in three days, please renew in time",
+            'title' => 'message.accountexpire.title',
+            'content' => "message.accountexpire.content",
             'type'   => "notification",
             'days'  => $this->days,
             

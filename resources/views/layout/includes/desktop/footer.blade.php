@@ -89,6 +89,32 @@
 <div class="jump-page-top" aria-label="Jump up to top of the page"><i class="fa fa-arrow-up" aria-hidden="true"></i>
 </div>
 
+
+<?php /* show modal when login successfully */ ?>
+@if(Session::has('successLogin'))
+<div class="modal fade has-login" id="loginSuccessModal" tabindex="-1" role="dialog" aria-labelledby="signinModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+
+            <div class="modal-body">
+
+                <div class="auth-content">
+                    <div class="icon-wrapper" style="text-align: center; margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="64" height="64"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z" fill="#3cfa52"/></svg>
+                    </div>
+                    <h4 style="text-align: center; color: #000; margin-bottom: 30px;">You logged!</h4>
+                    <button class="cs-btn cs-btn--primary" type="button" data-dismiss="modal" aria-label="Close">Ok</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Signin Modal -->
 <div class="modal fade" id="signinModal" tabindex="-1" role="dialog" aria-labelledby="signinModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -259,52 +285,6 @@
 </div>
 
 
-<!-- login sucess  Modal -->
-<div class="modal fade" id="noticeModal" tabindex="-1" role="dialog" aria-labelledby="noticeModal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-
-            <div class="modal-body">
-                <div class="auth-content">
-
-                    
-                    
-                    
-                   
-                        
-                        
-                    @if(Session::get('LoginSuccessMsg'))
-                        
-                     <div class="alert alert-danger ">
-                         
-                         <span> {{Session::get('LoginSuccessMsg')}} </span>
-                            <!-- <button class="close" data-close="alert"></button> -->
-                        </div>
-                        
-
-                      
-
-
-                        
-                    @endif
-
-
-                    
-                        
-                    <div class="form-link text-center">
-                            <a href="" class="modal-trigger" data-dismiss="modal">知道了</a>
-                     </div>
-                       
-                        
-                   
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 @yield("footer-script")
 
@@ -336,7 +316,10 @@
 
         });
         
-       
+       if ($("#loginSuccessModal").hasClass("has-login")) {
+            $("#loginSuccessModal").modal('show');
+        }
+
     });
 
    					

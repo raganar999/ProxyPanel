@@ -72,11 +72,12 @@ Route::group(['middleware' => ['auth:api','checkPostPara','localization']], func
     Route::get('user/ver1/test','Api\Client\UsersController@test');
     Route::get('user/ver1/notification','Api\Client\UsersController@notification');
     Route::get('user/ver1/dialog','Api\Client\UsersController@dialog');
+    Route::get('user/ver1/reopen','Api\Client\AuthsController@reopen');
     Route::post('user/ver1/logupload','Api\Client\UsersController@logUpload');
     Route::get('user/ver1/refreshstatus','Api\Client\UsersController@refreshStatus');
     Route::post('user/ver1/updateuser','Api\Client\AuthsController@updateUser');
     Route::post('user/ver1/buy','Api\Client\Buycontroller@create');
-    Route::get('user/ver1/serverlist','Api\Client\UsersController@nodeList');
+    Route::post('user/ver1/serverlist','Api\Client\UsersController@nodeList');
     Route::get('user/ver1/allowlist','Api\Client\UsersController@allowApps');
     Route::get('user/ver1/nodelist','Api\Client\UsersController@nodeList');
     Route::get('user/ver1/term','Api\Client\UsersController@term');
@@ -92,6 +93,7 @@ Route::group(['middleware' => ['auth:api','checkPostPara','localization']], func
     Route::get('user/ver1/help/{type}','Api\Client\UsersController@help');
     Route::get('user/ver1/affrecord','Api\Client\UsersController@getAffRecord');
     Route::post('user/ver1/edpawdcode/update-password-with-auth-token','Api\Client\AuthsController@updatePasswordWithAuth');
+    Route::post('user/ver1/purchase', 'PaymentController@purchase')->name('apiPurchase'); // 创建支付
 
 });
 

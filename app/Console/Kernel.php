@@ -48,7 +48,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('autoJob')->everyMinute();
-        $schedule->command('nodeStatusDetection')->everyTenMinutes();
+      //  $schedule->command('nodeStatusDetection')->everyTenMinutes();
         $schedule->command('serviceTimer')->everyTenMinutes();
         $schedule->command('autoClearLogs')->everyThirtyMinutes();
         $schedule->command('nodeHourlyTrafficStatistics')->hourly();

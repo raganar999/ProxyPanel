@@ -106,8 +106,10 @@ class AuthController extends Controller
        if ($user->hasPermissionTo('admin.index')) {
                 return Redirect::route('admin.index');
             }
-
-        return Redirect::back()->with('LoginSuccessMsg','登录成功');
+            
+        Session::flash('successLogin', true);
+        
+        return Redirect::back();
     }
 
     // 校验验证码

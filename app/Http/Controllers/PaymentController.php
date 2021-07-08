@@ -96,11 +96,12 @@ class PaymentController extends Controller
         $goods_id = $request->input('goods_id');
         $coupon_sn = $request->input('coupon_sn');
         self::$method = $request->input('method');
-        $amount  = $request->input('amount');
+      //  $amount  = ($request->input('amount'))* 0.72;
         $pay_type = $request->input('pay_type');
         $pay_mode = $request->input('pay_mode');
+        $client = $request->input('client');
         $credit = 0;
-        \Log::debug($goods_id);
+        \Log::debug($request);
         // 充值余额
         if ($credit) {
             if (! is_numeric($credit) || $credit <= 0) {
@@ -113,8 +114,9 @@ class PaymentController extends Controller
             if (! $goods || ! $goods->status) {
                 return Response::json(['status' => 'fail', 'message' => '订单创建失败：商品已下架']);
             }
-            $amount = $goods->price;
-
+            $amount = $goods->price ;
+           // \Log::debug($goods->price);
+           // \Log::debug($amount);
             // 是否有生效的套餐
             $activePlan = Order::userActivePlan()->doesntExist();
 
@@ -191,7 +193,7 @@ class PaymentController extends Controller
                 Helpers::addCouponLog('订单支付使用', $coupon->id, $goods_id, $newOrder->id);
             }
 
-            $request->merge(['id' => $newOrder->id, 'mode'=> $pay_mode,'type' => $pay_type, 'amount' => $amount]);
+            $request->merge(['id' => $newOrder->id, 'mode'=> $pay_mode, 'type' => $pay_type, 'amount' => $amount , 'client' => $client]);
 
             // 生成支付单
             return self::getClient()->purchase($request);

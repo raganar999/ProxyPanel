@@ -15,13 +15,15 @@ abstract class AbstractPayment
 
     abstract public function notify(Request $request): void;
 
-    protected function creatNewPayment($uid, $oid, $amount): Payment
+    protected function creatNewPayment($uid, $oid, $amount, $currency, $rate): Payment
     {
         $payment = new Payment();
         $payment->trade_no = Str::random(8);
         $payment->user_id = $uid;
         $payment->order_id = $oid;
         $payment->amount = $amount;
+        $payment->currency = $currency;
+        $payment->rate = $rate;
         $payment->save();
 
         return $payment;

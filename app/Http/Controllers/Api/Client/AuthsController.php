@@ -19,6 +19,7 @@ use App\Mail\sendVerifyCode;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Notifications\Verification;
+use App\Notifications\RegisterReward;
 use Illuminate\Support\Str;
 use Response;
 use Redirect;
@@ -48,6 +49,32 @@ class AuthsController extends Controller
         //self::$systemConfig = Helpers::systemConfig();
     }
    
+    
+    public function reopen(Request $request){
+
+	     	$user = auth()->user();
+	        $appkey = $request->header('appkey');
+            $device = $request->header('device');
+            $device_model = $request->device_model;
+            $device_brand = $request->device_brand;
+            $system_language = $request->system_language;
+            $system_version =  $request->system_version;
+			$is_register = 2;
+			
+			 $this->addUserLoginLog($user->id, IP::getClientIp(), $is_register, $device, $device_brand, $device_model, $system_language , $system_version );
+			
+			
+        	$response['error_code'] = 0;
+        	$response['message']    = 'reopen status report successfully ';
+        	$response['error_level']    = "log";
+        //	$response['data']       = $row ;
+        
+        	
+        	
+        	return response()->json($response);
+      
+	}
+    
     // 自动注册
     
    
@@ -74,21 +101,24 @@ class AuthsController extends Controller
             $password = Hash::make($password_str);
             $appkey = $request->header('appkey');
             $device = $request->header('device');
-            $aff = (int) $request->input('aff');
-           
+            //$aff = (int) $request->input('aff');
+            $inviterId =  $request->inviter_id;
+            $agent = $request->agent;
+            $chanel = $request->chanel;
+            
             $device_model = $request->device_model;
             $device_brand = $request->device_brand;
             $system_language = $request->system_language;
             $system_version =  $request->system_version;
            //\Log::debug($appkey);
-           //  \Log::debug($request);
+           \Log::debug($request);
             // 是否开启注册
             if (! sysConfig('is_register')) {
-                Session::flash('errorRegMsg', '系统维护，暂停注册');
-                return Redirect::back()->withErrors(trans('auth.register_close'));
+                //Session::flash('errorRegMsg', '系统维护，暂停注册');
+                return Response::json(['error_code' => 1001,  'message' => '暂停注册新用户', 'error_level' => 'alert']);
             }
 
-            // 校验域名邮箱黑白名单
+           /* // 校验域名邮箱黑白名单
             if (sysConfig('is_email_filtering')) {
                 $result = $this->emailChecker($email, 1);
                 if ($result !== false) {
@@ -96,7 +126,7 @@ class AuthsController extends Controller
                 }
             }
 
-            
+            */
            
 
            $is_app_key_exists = User::query()->where('app_key', $appkey)->first();
@@ -113,7 +143,7 @@ class AuthsController extends Controller
 
             $response['error_code'] = 0;
             $response['message']    = 'This device has already been registered and will log in directly';
-            $response['message_level']    = "alert";
+            $response['error_level']    = "toast";
             $response['token_data']       = [
                 'access_token' => $tokenResult->accessToken,
                 'expire_in'    => date("Y-m-d H:i:s" , strtotime($tokenResult->token->expires_at) ),
@@ -130,24 +160,24 @@ class AuthsController extends Controller
             // 获取可用端口
             $port = Helpers::getPort();
             if ($port > sysConfig('max_port')) {
-                return Redirect::back()->withInput()->withErrors(trans('auth.register_close'));
+                 return Response::json(['error_code' => 1002,  'message' => '暂停注册新用户', 'error_level' => 'alert']);
             }
 
             // 获取aff
-            $affArr = $this->getAff(10, $aff);
-            $inviter_id = $affArr['inviter_id'];
+          //  $affArr = $this->getAff(10, $aff);
+          //  $inviter_id = $affArr['inviter_id'];
 
-            $transfer_enable = MB * ((int) sysConfig('default_traffic') + ($inviter_id ? (int) sysConfig('referral_traffic') : 0));
+          //  $transfer_enable = MB * ((int) sysConfig('default_traffic') + ( $inviterId ? (int) sysConfig('referral_traffic') : 0));
 
-           
+           $transfer_enable = MB * ((int) sysConfig('default_traffic'));
           
             // 创建新用户
             $user_type = 0;
-            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id, $user_type , $appkey);
+            $user = Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'),  $user_type , $appkey);
            //  \Log::debug($user);
             // 注册失败，抛出异常
             if (! $user) {
-                return Redirect::back()->withInput()->withErrors(trans('auth.register_fail'));
+                return Response::json(['error_code' => 1001,  'message' => '自动注册失败', 'error_level' => 'alert']);
             }
             
             
@@ -161,14 +191,24 @@ class AuthsController extends Controller
             }
 
             // 更新邀请码
+            
+            /*
             if ($affArr['code_id'] && sysConfig('is_invite_register')) {
                 Invite::find($affArr['code_id'])->update(['invitee_id' => $uid, 'status' => 1]);
             }
+            */
+            //添加邀请记录
+             Helpers::addInviteLog($inviterId, $user->id, $agent, $chanel );
             
-              $is_register = 1;
+             $is_register = 1;
+             
+             //\Log::debug($user);
              $this->addUserLoginLog($user->id, IP::getClientIp(), $is_register, $appkey , $device, $device_brand, $device_model, $system_language , $system_version );
            // $user= User::find($uid);
            // \Log::debug($user);
+           //通知奖励
+            $user->notify(new RegisterReward(10,1));
+           
             $tokenResult = $user->createToken('Personal Access Token');
            //   \Log::debug($tokenResult);
             $token = $tokenResult->token;
@@ -176,7 +216,7 @@ class AuthsController extends Controller
             
                 $response['error_code'] = 0;
                 $response['message']    = 'Auto register  success';
-                $response['message_level']    = "alert";
+                $response['error_level']    = "log";
                 $response['token_data'] = [
             		'token_type'   =>  'Bearer',
                 	'access_token' => $tokenResult->accessToken,
@@ -219,6 +259,7 @@ class AuthsController extends Controller
 
             $response['error_code'] = 0;
             $response['message']    = 'login success';
+            $response['error_level']    = "log";
             $response['token_data']       = [
                 'token_type'   =>  'Bearer',
                 'access_token' => $tokenResult->accessToken,
@@ -241,7 +282,7 @@ class AuthsController extends Controller
             
          
             } else {
-                return Response::json(['error_code' => 3001,  'message' => '用户名或者密码错误']);
+                return Response::json(['error_code' => 2001,  'message' => 'Username or password is incorrect', 'error_level' => 'alert']);
             }
     }
 
@@ -280,9 +321,9 @@ class AuthsController extends Controller
         ]);
         if ($validator->fails()) {
             // return response()->json($validator->messages(), 422);
-            $response['error_code'] = 1000;
-            $response['message']    = '';
-
+            $response['error_code'] = 4001;
+            $response['message']    = '缺少参数';
+            $response['error_level']    = "toast";
             return response()->json([
                 'error' => $response
             ]);
@@ -302,15 +343,14 @@ class AuthsController extends Controller
 
                 $response['error_code'] = 0;
                 $response['message']    = '密码修改成功';
-                
-                return response()->json([
-                    'success' => $response
-                ]);
+                $response['error_level']    = "alert";
+                return response()->json( $response);
 
             }
         }else{
-            $response['error_code'] = 1000;
-            $response['message']    = '';
+            $response['error_code'] = 4002;
+            $response['message']    = '验证码无效，请重新获取';
+            $response['error_level']    = "alert";
             return response()->json($response);
               
         }
@@ -383,23 +423,15 @@ class AuthsController extends Controller
         $email = $request->email;
 
         if (!$email) {
-            $response['error_code'] = null;
-            $response['message']    = '1';
+            $response['error_code'] = 3001;
+            $response['message']    = '邮箱缺失，或者错误';
 
             return response()->json([
                 'error' => $response
             ]);
         }
 
-        // 校验账号合法性
-        if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $response['error_code'] = null;
-            $response['message']    = '2';
-
-            return response()->json([
-                'error' => $response
-            ]);
-        }
+       
       /*
         // 校验域名邮箱是否在敏感词中
         $sensitiveWords = $this->sensitiveWords();
@@ -415,7 +447,7 @@ class AuthsController extends Controller
       */
         $user = User::query()->where('email', $email)->first();
         if (!$user) {
-            $response['error_code'] = 3004;
+            $response['error_code'] = 3003;
             $response['message']    = "username does not exist";;
 
             return response()->json([
@@ -446,7 +478,8 @@ class AuthsController extends Controller
         Cache::put('send_verify_code_' . md5(IP::getClientIp()), IP::getClientIp(), 1);
 
         $response['error_code'] = 0;
-        $response['message']    = 'verification code was successfully sent to the mail';            
+        $response['message']    = 'verification code was successfully sent to the mail';   
+         $response['error_level']    = "alert";
         return response()->json($response);
 
 
@@ -617,7 +650,8 @@ class AuthsController extends Controller
     }
   }
 ],
-  "outbounds": [{
+  "outbounds": [
+  {
     "tag": "proxy",
     "protocol": "vmess",
     "settings": {
@@ -677,9 +711,9 @@ class AuthsController extends Controller
         "selector": [],
         "strategy": "optimal",
         "optimalSettings": {
-          "timeout": 8000,
+          "timeout": 200000,
           "interval": 300000,
-          "url": "https://about.google",
+          "url": "https://douyin.ga",
           "count": 1,
           "weights": []
          

@@ -122,6 +122,7 @@ class Node extends Model
         $config = [
             'id'    => $this->id,
             'name'  => $this->name,
+            'level'  => $this->level,
             'host'  => $this->host,
             'network'  => $this->network  / 100,
             'load'  => $this->load / 100,

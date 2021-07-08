@@ -64,7 +64,7 @@ class UsersController extends Controller
 	    $user = auth()->user();
 	    $user->notify(new AccountExpire($user->expired_at));
 	    $user->notify(new DataExhaust(60));
-	      
+	    
 	  // $data =  $user->unreadNotifications ;
 	 //   foreach ($user->unreadNotifications as $notification) {
 	 //      $data = $notification->data;
@@ -114,6 +114,7 @@ class UsersController extends Controller
 	    
 	    	$response['error_code'] = 1;
         	$response['message']    = 'Get allowlist successfully';
+        	$response['error_level']    = "log";
         	$response['allow_list'] =   $allowlist;
                
                  
@@ -131,6 +132,7 @@ class UsersController extends Controller
 
         	$response['error_code'] = 0;
         	$response['message']    = 'Get term successfully';
+        	$response['error_level']    = "log";
         	$response['data']        =   [
                
                    'term' =>  $term->content,
@@ -159,7 +161,7 @@ class UsersController extends Controller
 	  if ($request->isMethod('post')) {
        //  \Log::debug($request);
             $file = $request->file('log');
-         \Log::debug($file);
+       //  \Log::debug($file);
             // 文件是否上传成功
             if ($file->isValid()) {
 
@@ -174,13 +176,13 @@ class UsersController extends Controller
                 // 使用我们新建的uploads本地存储空间（目录）
                 //这里的uploads是配置文件的名称
                 $bool = Storage::disk('public')->put($filename, file_get_contents($realPath));
-                var_dump($bool);
+               // var_dump($bool);
 
             }
             
          	$response['error_code'] = 0;
         	$response['message']    = 'Upload log file successfully';
-
+            $response['error_level']    = "log";
         	
 		    return response()->json($response);
         }
@@ -202,6 +204,7 @@ class UsersController extends Controller
 	  
         	$response['error_code'] = 1;
         	$response['message']    = 'get the raff successful';
+        	$response['error_level']    = "log";
         	$response['data']       = $raff;
         	
 		    return response()->json([
@@ -272,6 +275,7 @@ class UsersController extends Controller
             
             $response['error_code'] = 0;
         	$response['message']    = '签到成功！';
+        	$response['message_level']    = "log";
         	$response['data']       =  [
                 'traffic' =>  $score_traffic,
                 'time'    => $score_time 
@@ -344,13 +348,15 @@ class UsersController extends Controller
             
            foreach ($user->unreadNotifications as $notification) {
              $data =  $notification->data;
-              \Log::debug($data);
+            //  \Log::debug($data);
+           //   \Log::debug(trans($data['title']));
               $row1                    = [];
               $row1['id']          = $notification->id;
               $row1['type']        = $data['type'];
-              $row1['title']       = $data['title'];
-              $row1['content']     = $data['content'];
-              $row1['time']        =  $notification->created_at->format('Y-m-d-H:i:s');
+              
+              $row1['title']       = trans($data['title']);
+              $row1['content']     = trans($data['content']);
+              $row1['time']        =  $notification->created_at->format('Y-m-d H:i:s');
               array_push($notice, $row1);
               $notification->markAsRead();
              
@@ -369,7 +375,8 @@ class UsersController extends Controller
 			$row["expire_ime"]          = $user->expired_at;
 			$row["user_status"]         = $user->status;
 			$row["user_email"]         = $user->email;
-			$row["latest_api_domain"]  = "https://zaozao.ml:7777";
+			$row["user_level"]         = $user->level;
+			$row["latest_api_domain"]  = "https://xiaoxue.ga";
 		//	$row["latest_buy_domain"]  = "zaozao2.ml";
 			$row["latest_ver"]         = "1.0.0";
 	        $row["notice"]             = $notice;
@@ -383,7 +390,7 @@ class UsersController extends Controller
        
     	$response['error_code'] = 0;
     	$response['message']    = 'Get the server list successfully';
-    	$response['message_level']    = 'alert';
+    	$response['error_level']    = "log";
     	$response['data']       = [
     		
             'user_status'     => $row ,
@@ -394,6 +401,8 @@ class UsersController extends Controller
 	    return response()->json($response);
     }
 
+
+  
 
 
 	public function refreshStatus(){
@@ -452,6 +461,7 @@ class UsersController extends Controller
 			$row["email"]               = $user->id;
 		    $row["speed_level"]         = "high";
 		    $row["user_type"]           = $user->type;
+		    $row["user_id"]             = $user->id;
 		
 		}
 
@@ -462,7 +472,7 @@ class UsersController extends Controller
 		if ($user) {
         	$response['error_code'] = 0;
         	$response['message']    = 'Get user status successfully ';
-        	$response['level']    = "alert";
+        	$response['error_level']    = "log";
         	$response['data']       = $row ;
         	
 		    return response()->json($response);
@@ -570,6 +580,8 @@ class UsersController extends Controller
 
 
 
+  
+   
 	
 
 

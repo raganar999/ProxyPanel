@@ -53,7 +53,8 @@ $(function () {
                 },
                 body: JSON.stringify({
                     amount: totalPrice,
-                    pay_type: 'alipay'
+                    pay_type: 'alipay',
+                    client: 'web'
                 })
             }
         ).then(function (response) {

@@ -327,7 +327,7 @@
                                                 <div class="input-group">
                                                     <input type="number" class="form-control" id="default_days" value="{{$default_days}}"/>
                                                     <div class="input-group-append">
-                                                        <span class="input-group-text">天</span>
+                                                        <span class="input-group-text">小时</span>
                                                         <button class="btn btn-primary" type="button"
                                                                 onclick="updateFromInput('default_days','0')">{{trans('common.update')}}</button>
                                                     </div>

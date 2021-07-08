@@ -19,10 +19,12 @@ class UserObserver
         $subscribe->code = Helpers::makeSubscribeCode();
         $subscribe->save();
 
-        $allowNodes = $user->nodes()->whereType(4)->get()->pluck('id');
+       $allowNodes = $user->nodes()->whereType(4)->get()->pluck('id');
         if ($allowNodes) {
             addUser::dispatch($user->id, $allowNodes);
         }
+        
+        
     }
 
     public function updated(User $user): void

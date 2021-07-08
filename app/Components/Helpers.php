@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserCreditLog;
 use App\Models\UserDataModifyLog;
 use App\Models\UserSubscribe;
+use App\Models\InviteLog;
 use Cache;
 use DateTime;
 use Str;
@@ -61,29 +62,26 @@ class Helpers
      *
      * @return int
      */
-    public static function addUser(string $email, string $password, string $transfer_enable, int $data, $inviter_id = null): int
+     public static function addUser(string $email, string $password, int $transfer_enable, int $date = null,  int $user_type = 1, string $appkey = null, string $username = null ): User
     {
-        $user = new User();
-        $user->username = $email;
-        $user->email = $email;
-        $user->password = $password;
-        // 生成一个可用端口
-        $user->port = self::getPort();
-        $user->passwd = Str::random();
-        $user->vmess_id = Str::uuid();
-        $user->enable = 1;
-        $user->method = self::getDefaultMethod();
-        $user->protocol = self::getDefaultProtocol();
-        $user->obfs = self::getDefaultObfs();
-        $user->transfer_enable = $transfer_enable;
-        $user->expired_at = date('Y-m-d', strtotime('+'.$data.' days'));
-        $user->reg_ip = IP::getClientIp();
-        $user->inviter_id = $inviter_id;
-        $user->reset_time = null;
-        $user->status = 0;
-        $user->save();
-
-        return $user->id;
+        return User::create([
+            'username'        => $username ?? $email,
+            'email'           => $email,
+            'password'        => $password,
+            'port'            => self::getPort(), // 生成一个可用端口
+            'passwd'          => Str::random(),
+            'vmess_id'        => Str::uuid(),
+            'method'          => self::getDefaultMethod(),
+            'protocol'        => self::getDefaultProtocol(),
+            'obfs'            => self::getDefaultObfs(),
+            'transfer_enable' => $transfer_enable,
+            'expired_at'      => date('Y-m-d', strtotime($date.' days')),
+            'user_group_id'   => null,
+            'reg_ip'          => IP::getClientIp(),
+           // 'inviter_id'      => $inviter_id,
+            'type'            => $user_type,
+            'app_key'         => $appkey,
+        ]);
     }
 
     // 获取一个有效端口
@@ -256,6 +254,18 @@ class Helpers
         $log->description = $description;
 
         return $log->save();
+    }
+    
+    public static function addInviteLog (int $inviterId , int $inviteeId, string $chanel ,  string $agent): bool
+    {
+        $log = new InviteLog();
+        $log->inviter_id = $inviterId;
+        $log->invitee_id = $inviteeId;
+        $log->chanel = $chanel;
+        $log->agent = $agent;
+        
+        return $log->save();
+        
     }
 
     public static function abortIfNotModified($data): string
