@@ -115,7 +115,7 @@ class Node extends Model
         $lable_list = [];
             $lables = $this->labels()->get();
             foreach ($lables as $lable) {
-                $lable_list[] = sysConfig('website_url').'/assets/images/lable/'.($lable->name).'.png';
+                $lable_list[] = '/assets/images/lable/'.($lable->name).'.png';
                 
             };
             
@@ -132,8 +132,9 @@ class Node extends Model
             'tag'   => $this->tag ,
             'Weights' =>  $this-> weights,
             //'country_code' => $this->country_code,
-            'country_url' =>sysConfig('website_url').'/assets/images/country/'.($this->country_code).'.png',
+           // 'country_url' =>sysConfig('website_url').'/assets/images/country/'.($this->country_code).'.png',
             //'lable_list'     => $this->labels()->pluck('name'),
+            'country_url' =>'/assets/images/country/'.($this->country_code).'.png',
             'lable_list'     => $lable_list,
             
         ];

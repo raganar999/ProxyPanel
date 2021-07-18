@@ -103,13 +103,29 @@ class AuthController extends Controller
         $user->update(['last_login' => time()]);
         
       // 根据权限跳转
-       if ($user->hasPermissionTo('admin.index')) {
+      /* if ($user->hasPermissionTo('admin.index')) {
                 return Redirect::route('admin.index');
             }
+            */
             
-        Session::flash('successLogin', true);
+            
+            
+            if (Session::has('redirectUrl')) {
+                // on mobile
+                return redirect(session('redirectUrl'));
+            } elseif(Auth::getUser()->can('admin.index')) {  //如果是管理員直接跳轉到管理主頁 
+             
+                     return Redirect::route('admin.index');
+              
+                
+            }else { 
+                
+                   Session::flash('successLogin', true);
         
-        return Redirect::back();
+                   return Redirect::back()->with('LoginSuccessMsg','登录成功');
+        
+                  }
+   
     }
 
     // 校验验证码
@@ -301,7 +317,7 @@ class AuthController extends Controller
         $transfer_enable = MB * ((int) sysConfig('default_traffic') + ($inviter_id ? (int) sysConfig('referral_traffic') : 0));
 
         // 创建新用户
-        $user =  Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'), $inviter_id);
+        $user =  Helpers::addUser($email, $password, $transfer_enable, sysConfig('default_days'));
 
         // 注册失败，抛出异常
         if (! $user) {

@@ -2,9 +2,25 @@
 
 return [
 
+
+    //register
+    'title'           => '登入',
+    'tips'            => '请输入用户名和密码',
+    'usernamel'        => '用戶名',
+    'password'        => '密码',
+    'captcha'         => '验证码',
+    'remember'        => '记住我',
+    'forget_password' => '忘记密码',
+    'login'           => '登 入',
+    'register'        => '注 册',
+    'email' => '请输入您的邮箱',
+    'password' => '请输入您的密码',
+    'retype_password'=> '请再次输入您的密码',
+    
     // General
     'login' => '登录',
     'register' => '注册',
+    'reset_password' => '重置密碼',
     'usercenter' => '用户中心',
     'logout' => '退出',
     
@@ -21,9 +37,7 @@ return [
     
     //login &register
     
-    'email' => '请输入您的邮箱',
-    'password' => '请输入您的密码',
-    'retype_password'=> '请再次输入您的密码',
+   
     
     
     

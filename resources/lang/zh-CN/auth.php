@@ -1,6 +1,7 @@
 <?php
 
 return [
+   
     'accept_term'     => '我已阅读并同意遵守',
     'active'          => [
         'attribute' => '激活',

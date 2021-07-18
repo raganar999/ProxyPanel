@@ -106,6 +106,9 @@ class FrontPageController extends Controller
     public function account()
     {
         $agent = new Agent();
+        
+         $url = url()->previous();
+         Session::flash('redirectUrl',  $url);
 
         if ($agent->isMobile() || $agent->isTablet()) {
             return view('static-pages.mobile.account');

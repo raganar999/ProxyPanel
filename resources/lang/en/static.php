@@ -2,14 +2,31 @@
 
 return [
 
+    //register
+    'title'           => 'Sign In',
+    'tips'            => 'Please Enter Username and Password',
+    'username'           => 'username',
+  //  'password'        => 'Password',
+    'captcha'         => 'Captcha',
+    'remember'        => 'Remember Me',
+    'forget_password' => 'Forget Password',
+    
+    'login'           => 'Sign In',
+    'register'        => 'Sign Up',
+    'email' => 'Please enter your email',
+    'password' => 'please enter your password',
+    'retype_password' => 'Please renter your password',
+    
+    
     // General
     'login' => 'Sign In',
     'register' => 'Sign Up',
+    'reset_password' => 'Reset Password',
     'usercenter' => 'UserCenter',
     'logout' => 'LogOut',
     
     
-    
+    'homepage'  => 'Home',
     'features'  => 'Features',
     'price'  => 'Price',
     'download'  => ' Apps',
@@ -23,11 +40,7 @@ return [
     'about_us' => 'About Us',
     
    
-    //login
-    'email' => 'Please enter your email',
-    'password' => 'please enter your password',
-    'retype_password' => 'Please renter your password',
-    
+   
     
     
     // DESKTOP

@@ -154,7 +154,7 @@ class PaymentController extends Controller
 
                 // 判断是否存在同个商品的未支付订单
                 if (Order::uid()->whereStatus(0)->exists()) {
-                    return Response::json(['status' => 'fail', 'message' => '订单创建失败：尚有未支付的订单，请先去支付']);
+                    return Response::json(['status' => 'fail', 'message' => '订单创建失败：尚有太多未支付的订单，请先用戶中心取消']);
                 }
             } elseif (Auth::getUser()->credit < $amount) { // 验证账号余额是否充足
                 return Response::json(['status' => 'fail', 'message' => '您的余额不足，请先充值']);

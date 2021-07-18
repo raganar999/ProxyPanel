@@ -16,7 +16,7 @@ Route::middleware(['isForbidden', 'affiliate', 'isMaintenance'])->group(function
     Route::get('login', 'AuthController@showLoginForm')->middleware('isSecurity')->name('login'); // 登录页面
     Route::post('login', 'AuthController@login')->middleware('isSecurity'); // 登录
     Route::get('logout', 'AuthController@logout')->name('logout'); // 退出
-   // Route::get('register', 'AuthController@showRegistrationForm')->name('register'); // 注册
+    Route::get('register', 'AuthController@showRegistrationForm')->name('register'); // 注册
     Route::post('register', 'AuthController@register'); // 注册
     Route::match(['get', 'post'], 'reset', 'AuthController@resetPassword')->name('resetPasswd'); // 重设密码
     Route::match(['get', 'post'], 'reset/{token}', 'AuthController@reset')->name('resettingPasswd'); // 重设密码

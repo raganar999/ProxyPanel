@@ -651,47 +651,13 @@ class AuthsController extends Controller
   }
 ],
   "outbounds": [
-  {
-    "tag": "proxy",
-    "protocol": "vmess",
-    "settings": {
-      "vnext": [
-        {
-          "address": "v2ray.cool",
-          "port": 10086,
-          "users": [
-            {
-              "id": "a3482e88-686a-4a58-8126-99c9df64b7bf",
-              "alterId": 64,
-              "security": "auto",
-              "level": 8
-            }
-          ]
-        }
-      ],
-      "servers": [
-        {
-        "address": "v2ray.cool",
-        "method": "chacha20",
-        "ota": false,
-        "password": "123456",
-        "port": 10086,
-        "level": 8
-      }
-      ]
-    },
-    "streamSettings": {
-      "network": "tcp"
-    },
-    "mux": {
-      "enabled": false
-    }
-  },
+ 
   {
     "protocol": "freedom",
     "settings": {},
     "tag": "direct"
   },
+  
   {
     "protocol": "blackhole",
     "tag": "block",

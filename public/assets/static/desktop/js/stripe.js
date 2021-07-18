@@ -64,12 +64,14 @@ $(function () {
             return response.json();
         }).then(function (responseJson) {
             console.log(responseJson);
-            var clientSecret = responseJson.client_secret;
+            if (responseJson.status==="success"){
+           
+               var clientSecret = responseJson.client_secret;
 
-            stripe.confirmAlipayPayment(clientSecret, {
+                stripe.confirmAlipayPayment(clientSecret, {
                 // Return URL where the customer should be redirected to after payment
-                return_url: `http://${window.location.host}/payment/payment-success`,
-            }).then((result) => {
+                     return_url: `http://${window.location.host}/payment/payment-success`,
+                }).then((result) => {
                  $('.loading').css('display', 'none');
                 if (result.error) {
                     $this.prop('disabled', false);
@@ -77,7 +79,13 @@ $(function () {
                     var alipayError = document.getElementById('alipay-error');
                     alipayError.textContent = result.error.message;
                 }
-            });
+                      });
+            }else{
+                 $('.loading').css('display', 'none');
+                 var alipayError = document.getElementById('alipay-error');
+                 
+                 alipayError.textContent = responseJson.message;
+            }
         });
     });
 

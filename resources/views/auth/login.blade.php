@@ -30,12 +30,12 @@
         <button type="submit" class="btn btn-lg btn-block mt-40 bg-indigo-500 text-white">{{trans('auth.login')}}</button>
     </form>
     @if(sysConfig('is_register'))
-        <p>
+       <p>
             {{trans('auth.register.promotion')}}
             <a href="{{route('register')}}" class="btn btn-xs bg-purple-500 text-white">
-                {{trans('auth.register.attribute')}}<i class="icon wb-arrow-right" aria-hidden="true"></i>
-            </a>
-        </p>
+               {{trans('auth.register.attribute')}}<i class="icon wb-arrow-right" aria-hidden="true"></i>
+           </a>
+       </p>
     @endif
 @endsection
 @section('javascript')
@@ -43,7 +43,7 @@
       $('#login-form').submit(function(event) {
           @switch(sysConfig('is_captcha'))
           @case(3)
-        // 先检查Google reCAPTCHA有没有进行验证
+        //先检查Google reCAPTCHA有没有进行验证
         if ($('#g-recaptcha-response').val() === '') {
           swal.fire({title: '{{trans('auth.captcha.required')}}', icon: 'error'});
           return false;

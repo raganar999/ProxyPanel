@@ -43,6 +43,31 @@
 
 </div> <!-- ./end wrappers -->
 
+<?php /* show modal when login successfully */ ?>
+@if(Session::has('successLogin'))
+<div class="modal fade has-login" id="loginSuccessModal" tabindex="-1" role="dialog" aria-labelledby="signinModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+
+            <div class="modal-body">
+
+                <div class="text-bg">
+                    <div class="icon-wrapper" style="text-align: center; margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="64" height="64"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z" fill="#3cfa52"/></svg>
+                    </div>
+                    <h4 style="text-align: center; color: #000; margin-bottom: 30px;">You logged!</h4>
+                    <button class="cs-btn cs-btn--primary" type="button" data-dismiss="modal" aria-label="Close">Ok</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @yield("footer-script")
 
 <script>
@@ -74,6 +99,10 @@
         } else {
             $(".cs-btn--ios").show();
             $(".cs-btn--android").show();
+        }
+        
+         if ($("#loginSuccessModal").hasClass("has-login")) {
+            $("#loginSuccessModal").modal('show');
         }
     });
 </script>
