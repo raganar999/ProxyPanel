@@ -101,7 +101,7 @@ class PaymentController extends Controller
         $pay_mode = $request->input('pay_mode');
         $client = $request->input('client');
         $credit = 0;
-        \Log::debug($request);
+      //  \Log::debug($request);
         // 充值余额
         if ($credit) {
             if (! is_numeric($credit) || $credit <= 0) {
@@ -194,7 +194,7 @@ class PaymentController extends Controller
             }
 
             $request->merge(['id' => $newOrder->id, 'mode'=> $pay_mode, 'type' => $pay_type, 'amount' => $amount , 'client' => $client]);
-
+            //\Log::debug($request);
             // 生成支付单
             return self::getClient()->purchase($request);
         } catch (Exception $e) {

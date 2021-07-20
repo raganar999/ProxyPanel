@@ -35,7 +35,7 @@ class Stripe extends AbstractPayment
 
         try {
             $session = Session::create($data);
-            //\Log::debug($session);
+            \Log::debug($session);
             $session_id =  $session->id;
            // $payment->update(['url' => $url]);
            

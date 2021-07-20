@@ -50,18 +50,18 @@
             @if (!Auth::check())
             <div class="status-message" style="margin-bottom: 10px; text-align:center; color: red;">Need to login to purchase.</div>
             @endif
-
+            <div id="alipay-error" class="status-message" style="margin-bottom: 10px; text-align:center; color: red;"></div>
             <form class="form--mobilePayment" action="your url here to process mobile payment" method="POST">
                 @csrf
                 <div class="prices-items">
                     @foreach($packageList as $package)
                     @if (Auth::check())
-                    <div class="prices-items__bar js-checkout" data-plan-id="1">
+                    <div class="prices-items__bar js-checkout" data-plan-id="2">
                         <div class="bar-top"><span>{{$package->name}}</span> <span>{{$package->days}} Days</span> <span>Price $ {{$package->price}}</span></div>
                         <div class="bar-bottom"><span>Device num:{{$package->usage}} and unlimited traffic</span></div>
                     </div>
                     @else
-                    <a href="{{ url('/account-n') }}" class="prices-items__bar" data-plan-id="1">
+                    <a href="{{ url('/account-n') }}" class="prices-items__bar" data-plan-id="2">
                       
                        <div class="bar-top"><span>{{$package->name}}</span> <span>{{$package->days}} Days</span> <span>Price $ {{$package->price}}</span></div>
                         <div class="bar-bottom">Device Num:{{$package->usage}} / Unlimited traffic</div>
@@ -71,7 +71,7 @@
                     @endforeach
                     <div class="prices-items__type">
                         <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" id="alipayCheck" name="paymentType" checked value="ali">
+                            <input type="radio" class="custom-control-input" id="alipayCheck" name="paymentType" checked value="alipay">
                             <label class="custom-control-label" for="alipayCheck"><img src="{{ asset('assets/static/mobile/images/prices/alipay-logo.png') }}" alt="alipay"></label>
                         </div>
                         <div class="custom-control custom-radio">
@@ -132,22 +132,35 @@
             const formData = new FormData();
             const paymentType = $('input[name="paymentType"]:checked').val();
             const token = $('input[name="_token"]').val();
-            formData.append('paymentType', paymentType);
-            formData.append('planID', planID);
+            formData.append('pay_type', paymentType);
+            formData.append('method', 'stripe' );
+            formData.append('goods_id', planID);
+            formData.append('pay_mode', 'session');
+            formData.append('client', 'web');
             formData.append('_token', token);
             $(".loading").show();
-            fetch('create-checkout-session', {
+            fetch('payment/purchase', {
                     method: 'POST',
                     body: formData
                 })
                 .then(function(response) {
+                    console.log(response);
                     return response.json();
                 })
                 .then(function(session) {
+                    
+                    console.log(session);
                     // redirecting to session page
+                if (session.status==="success"){
+           
                     return stripe.redirectToCheckout({
                         sessionId: session.id
                     });
+                }else{
+                     var alipayError = document.getElementById('alipay-error');
+                     alipayError.textContent = session.message;
+                    
+                }
                 })
                 .then(function(result) {
                     if (result.error) {

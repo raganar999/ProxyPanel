@@ -52,6 +52,9 @@
                             <div class="payment-step__head">
                                 <span class="badge">{{ __('static.dsktp_prices_first_step_title') }}</span>
                                 <h2>{{ __('static.dsktp_prices_first_step_text') }}</h2>
+                                 @if (!Auth::check())
+                                <h2 style=" color: red;">(需要登錄之後才能購買)</h2>
+                                 @endif
                             </div>
                         </div>
 
